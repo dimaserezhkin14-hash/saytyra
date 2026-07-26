@@ -3,183 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Алдиярчик на букаке</title>
+    <title>Автосервис | Профессиональный ремонт и обслуживание</title>
     <style>
-        body {
-            background-color: #0b0b0b;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
+        :root {
+            --bg-color: #0f1115;
+            --card-bg: #1a1d24;
+            --accent: #f39c12;
+            --accent-hover: #e67e22;
+            --text: #ffffff;
+            --text-muted: #a0a5b0;
+            --border: #2a2f3b;
+        }
+
+        * {
             box-sizing: border-box;
-            text-align: center;
-            overflow: hidden;
-            position: relative;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        .bukake-particle {
-            position: absolute;
+        body {
+            background-color: var(--bg-color);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: rgba(15, 17, 21, 0.95);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 20px;
             font-weight: bold;
-            pointer-events: none;
-            opacity: 0.7;
-            animation: fall linear infinite;
-            white-space: nowrap;
-            z-index: 1;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        @keyframes fall {
-            0% { transform: translateY(-50px) rotate(0deg); opacity: 0; }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.8; }
-            100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+        .phone {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .hero {
+            padding: 40px 20px;
+            text-align: center;
+            background: linear-gradient(rgba(15,17,21,0.8), rgba(15,17,21,0.95)), url('https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1200&q=80') center/cover;
+        }
+
+        .hero h1 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: var(--text);
+        }
+
+        .hero p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
         }
 
         .container {
-            max-width: 400px;
-            width: 100%;
-            position: relative;
-            z-index: 2;
-            background: rgba(18, 18, 18, 0.85);
             padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
+            max-width: 800px;
+            margin: 0 auto;
         }
 
-        img {
-            width: 100%;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            margin-bottom: 15px;
+        section {
+            margin-bottom: 40px;
         }
 
-        h1 {
+        h2 {
             font-size: 22px;
-            margin: 10px 0 5px 0;
-            color: #ff4757;
-            text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--accent);
+            padding-left: 10px;
         }
 
-        h3 {
-            font-size: 16px;
-            margin: 0 0 15px 0;
-            color: #a4b0be;
+        .services-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
         }
 
-        input {
+        .service-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .service-card h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+            color: var(--accent);
+        }
+
+        .service-card p {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .calc-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        .calc-box label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .calc-box select, .calc-box input {
             width: 100%;
             padding: 12px;
-            margin: 8px 0;
-            box-sizing: border-box;
-            background: #222;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 8px;
-            font-size: 15px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 16px;
         }
 
-        button {
-            background: linear-gradient(135deg, #ff4757, #ff6b81);
-            color: #fff;
-            border: none;
-            padding: 14px 24px;
-            font-size: 16px;
+        .price-result {
+            font-size: 18px;
             font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.2s;
+            color: var(--accent);
             margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+        }
+
+        .contact-form input, .contact-form textarea {
             width: 100%;
-        }
-
-        button:active {
-            transform: scale(0.95);
-        }
-
-        #output {
-            margin-top: 15px;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            margin-bottom: 15px;
             font-size: 16px;
-            font-weight: bold;
-            min-height: 25px;
+        }
+
+        .contact-form textarea {
+            height: 100px;
+            resize: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: var(--card-bg);
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .success-msg {
+            background: #27ae60;
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <img src="dog.jpg" alt="Алдиярчик">
-    
-    <h1>Алдиярчик на букаке</h1>
-    <h3>Запись на процедуру</h3>
+    <header>
+        <div class="logo">⚙️ СТО ДЕМО</div>
+        <a href="tel:+70000000000" class="phone">📞 +7 (999) 000-00-00</a>
+    </header>
 
-    <form id="orderForm" onsubmit="sendToTelegram(event)">
-        <input type="text" id="clientName" placeholder="Твое имя" required>
-        <input type="tel" id="clientPhone" placeholder="Номер телефона" required>
-        <button type="submit">Оставить заявку</button>
-    </form>
+    <div class="hero">
+        <h1>Качественный ремонт вашего автомобиля</h1>
+        <p>Современное оборудование, честные цены и гарантия на все виды работ.</p>
+        <a href="#contact" class="btn">Записаться на ремонт</a>
+    </div>
 
-    <div id="output"></div>
-</div>
-
-<script>
-    const BOT_TOKEN = "8980295775:AAHVR7lRM_NK2p9_ep-YfrEfXCpumfFYU-c";
-    const CHAT_ID = "6508223425";
-
-    const colors = ["#2ed573", "#ff4757", "#ffa502", "#1e90ff", "#9b59b6", "#00d2d3", "#ff6b81"];
-
-    function sendToTelegram(event) {
-        event.preventDefault();
-        const name = document.getElementById('clientName').value;
-        const phone = document.getElementById('clientPhone').value;
-        const out = document.getElementById("output");
-
-        const message = `🔥 Новая заявка с сайта!\n👤 Имя: ${name}\n📞 Телефон: ${phone}`;
-        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}`;
-
-        out.textContent = "Отправка...";
-        out.style.color = "#ffa502";
-
-        fetch(url)
-            .then(response => {
-                if (response.ok) {
-                    out.textContent = "✅ Заявка успешно отправлена!";
-                    out.style.color = "#2ed573";
-                    document.getElementById('orderForm').reset();
-                } else {
-                    out.textContent = "❌ Ошибка при отправке.";
-                    out.style.color = "#ff4757";
-                }
-            })
-            .catch(() => {
-                out.textContent = "❌ Ошибка сети.";
-                out.style.color = "#ff4757";
-            });
-    }
-
-    function createBukakeRain() {
-        const text = document.createElement('div');
-        text.className = 'bukake-particle';
-        text.textContent = 'БУКАКЕ';
-        text.style.left = Math.random() * 100 + 'vw';
-        text.style.top = '-50px';
-        text.style.fontSize = (Math.random() * 16 + 12) + 'px';
-        text.style.color = colors[Math.floor(Math.random() * colors.length)];
+    <div class="container">
         
-        const duration = Math.random() * 3 + 2;
-        text.style.animationDuration = duration + 's';
+        <!-- Услуги -->
+        <section>
+            <h2>Наши услуги</h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <h3>🔧 Компьютерная диагностика</h3>
+                    <p>Полное сканирование электронных систем, чтение и сброс ошибок всех блоков управления.</p>
+                </div>
+                <div class="service-card">
+                    <h3>🛠 Ремонт ходовой части</h3>
+                    <p>Замена рычагов, амортизаторов, сайлентблоков, подшипников ступицы и ремонт подвески.</p>
+                </div>
+                <div class="service-card">
+                    <h3>🛢 Замена технических жидкостей</h3>
+                    <p>Быстрая замена моторного масла, антифриза, тормозной жидкости и фильтров.</p>
+                </div>
+                <div class="service-card">
+                    <h3>🛑 Тормозная система</h3>
+                    <p>Замена колодок, тормозных дисков, прокачка магистралей и обслуживание суппортов.</p>
+                </div>
+            </div>
+        </section>
 
-        document.body.appendChild(text);
-        setTimeout(() => text.remove(), duration * 1000);
-    }
+        <!-- Калькулятор -->
+        <section>
+            <h2>Онлайн-калькулятор цен</h2>
+            <div class="calc-box">
+                <label>Выберите тип услуги:</label>
+                <select id="serviceType" onchange="calculate()">
+                    <option value="1500">Компьютерная диагностика — от 1 500 ₽</option>
+                    <option value="2500">Замена масла и фильтра — от 2 500 ₽</option>
+                    <option value="4000">Замена тормозных колодок — от 4 000 ₽</option>
+                    <option value="3000">Диагностика подвески — от 3 000 ₽</option>
+                </select>
 
-    setInterval(createBukakeRain, 300);
-</script>
+                <label>Класс автомобиля:</label>
+                <select id="carClass" onchange="calculate()">
+                    <option value="1">Легковой / Седан (Коэф. 1.0)</option>
+                    <option value="1.3">Кроссовер / Универсал (Коэф. 1.3)</option>
+                    <option value="1.6">Внедорожник / Коммерческий (Коэф. 1.6)</option>
+                </select>
 
+                <div class="price-result">Примерная стоимость: <span id="totalPrice">1500</span> ₽</div>
+            </div>
+        </section>
+
+        <!-- Форма записи -->
+        <section id="contact">
+            <h2>Запись на сервис</h2>
+            <div class="contact-form">
+                <input type="text" id="clientName" placeholder="Ваше имя">
+                <input type="tel" id="clientPhone" placeholder="Номер телефона">
+                <textarea id="clientMessage" placeholder="Опишите проблему или укажите марку авто..."></textarea>
+                <button class="btn" style="width: 100%;" onclick="sendForm()">Отправить заявку</button>
+                <div id="successMessage" class="success-msg">Заявка успешно отправлена! Мы свяжемся с вами.</div>
+            </div>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Демо Автосервис. Все права защищены.</p>
+    </footer>
+
+    <script>
+        function calculate() {
+            const basePrice = parseFloat(document.getElementById('serviceType').value);
+            const koef = parseFloat(document.getElementById('carClass').value);
+            const total = Math.round(basePrice * koef);
+            document.getElementById('totalPrice').innerText = total;
+        }
+
+        function sendForm() {
+            const name = document.getElementById('clientName').value.trim();
+            const phone = document.getElementById('clientPhone').value.trim();
+            
+            if(!name || !phone) {
+                alert('Пожалуйста, заполните имя и телефон!');
+                return;
+            }
+
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('clientName').value = '';
+            document.getElementById('clientPhone').value = '';
+            document.getElementById('clientMessage').value = '';
+
+            setTimeout(() => {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 4000);
+        }
+    </script>
 </body>
 </html>
