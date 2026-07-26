@@ -6,7 +6,7 @@
     <title>Алдиярчик на букаке</title>
     <style>
         body {
-            background-color: #121212;
+            background-color: #0b0b0b;
             color: #ffffff;
             font-family: Arial, sans-serif;
             display: flex;
@@ -18,47 +18,95 @@
             padding: 20px;
             box-sizing: border-box;
             text-align: center;
+            overflow: hidden;
+            position: relative;
         }
+
+        /* Фоновый дождь из слова "букаке" */
+        .bukake-particle {
+            position: absolute;
+            font-weight: bold;
+            pointer-events: none;
+            opacity: 0.7;
+            animation: fall linear infinite;
+            white-space: nowrap;
+            z-index: 1;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-50px) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(105vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
         .container {
             max-width: 400px;
             width: 100%;
+            position: relative;
+            z-index: 2;
+            background: rgba(18, 18, 18, 0.85);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
         }
+
         img {
             width: 100%;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             margin-bottom: 15px;
         }
+
         h1 {
             font-size: 22px;
             margin: 10px 0 5px 0;
             color: #ff4757;
+            text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
         }
+
         h3 {
             font-size: 16px;
             margin: 0 0 15px 0;
             color: #a4b0be;
         }
+
         button {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
             color: #fff;
             border: none;
-            padding: 12px 24px;
+            padding: 14px 24px;
             font-size: 16px;
             font-weight: bold;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             transition: 0.2s;
             margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+            width: 100%;
         }
+
         button:active {
             transform: scale(0.95);
         }
+
         #output {
             margin-top: 15px;
             font-size: 18px;
             font-weight: bold;
             min-height: 25px;
+            text-shadow: 0 0 8px rgba(255,255,255,0.3);
         }
     </style>
 </head>
@@ -70,23 +118,42 @@
     <h1>Алдиярчик на букаке</h1>
     <h3>Уретра и питбайк</h3>
 
-    <button onclick="doRandomAction()">Нажми меня</button>
+    <button onclick="doRandomAction()">Нажми ради букаке</button>
     <div id="output"></div>
 </div>
 
 <script>
     const phrases = [
-        "Питбайк успешно угнан!",
-        "Уретра пробита насквозь!",
-        "Алдиярчик оформляет букаке!",
-        "Мотоцикл заглох в луже!",
-        "Мощный занос на мопсе!",
-        "Газ в пол, уретра горит!"
+        "Питбайк успешно угнан на букаке!",
+        "Уретра пробита букаке насквозь!",
+        "Алдиярчик оформляет жесткое букаке!",
+        "Мотоцикл заглох в луже букаке!",
+        "Мощный занос на мопсе в букаке!",
+        "Газ в пол, уретра горит от букаке!"
     ];
 
-    const colors = ["#2ed573", "#ff4757", "#ffa502", "#1e90ff", "#9b59b6", "#00d2d3"];
+    const colors = ["#2ed573", "#ff4757", "#ffa502", "#1e90ff", "#9b59b6", "#00d2d3", "#ff6b81"];
+
+    // Плюшка: Встроенный звуковой генератор (пиликалка при клике без внешних файлов)
+    function playSound() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.15);
+        } catch(e) {}
+    }
 
     function doRandomAction() {
+        playSound();
         const randPhrase = phrases[Math.floor(Math.random() * phrases.length)];
         const randColor = colors[Math.floor(Math.random() * colors.length)];
         
@@ -94,6 +161,31 @@
         out.textContent = randPhrase;
         out.style.color = randColor;
     }
+
+    // Плюшка: Динамический генератор летящих со всех сторон надписей "БУКАКЕ"
+    function createBukakeRain() {
+        const text = document.createElement('div');
+        text.className = 'bukake-particle';
+        text.textContent = 'БУКАКЕ';
+        text.style.left = Math.random() * 100 + 'vw';
+        text.style.top = '-50px';
+        text.style.fontSize = (Math.random() * 16 + 12) + 'px';
+        text.style.color = colors[Math.floor(Math.random() * colors.length)];
+        
+        // Рандомная скорость падения
+        const duration = Math.random() * 3 + 2;
+        text.style.animationDuration = duration + 's';
+
+        document.body.appendChild(text);
+
+        // Удаляем элемент после завершения анимации, чтобы не грузить память
+        setTimeout(() => {
+            text.remove();
+        }, duration * 1000);
+    }
+
+    // Запускаем спавн летящих надписей каждые 300 миллисекунд
+    setInterval(createBukakeRain, 300);
 </script>
 
 </body>
