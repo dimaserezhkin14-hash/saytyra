@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой Сайт</title>
+    <title>Алдиярчик на букаке</title>
     <style>
         body {
             background-color: #121212;
@@ -13,41 +13,89 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            width: 100%;
+        }
+        img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 15px;
+        }
+        h1 {
+            font-size: 22px;
+            margin: 10px 0 5px 0;
+            color: #ff4757;
+        }
+        h3 {
+            font-size: 16px;
+            margin: 0 0 15px 0;
+            color: #a4b0be;
         }
         button {
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #fff;
             background-color: #007bff;
+            color: #fff;
             border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: 0.2s;
+            margin-top: 10px;
         }
-        button:hover {
-            background-color: #0056b3;
+        button:active {
+            transform: scale(0.95);
         }
-        #message {
-            margin-top: 20px;
-            font-size: 24px;
+        #output {
+            margin-top: 15px;
+            font-size: 18px;
             font-weight: bold;
-            color: #2ecc71;
+            min-height: 25px;
         }
     </style>
 </head>
 <body>
 
-    <button onclick="showMessage()">Нажми меня</button>
-    <div id="message"></div>
+<div class="container">
+    <!-- Если хочешь загрузить картинку в репо, замени src на "dog.jpg" -->
+    <img src="https://i.ibb.co/3ykd12vS/1000015134-2.jpg" alt="Алдиярчик">
+    
+    <h1>Алдиярчик на букаке</h1>
+    <h3>Уретра и питбайк</h3>
 
-    <script>
-        function showMessage() {
-            document.getElementById('message').innerText = 'Привет!';
-        }
-    </script>
+    <button onclick="doRandomAction()">Нажми меня</button>
+    <div id="output"></div>
+</div>
+
+<script>
+    const phrases = [
+        "Питбайк успешно угнан!",
+        "Уретра пробита насквозь!",
+        "Алдиярчик оформляет букаке!",
+        "Мотоцикл заглох в луже!",
+        "Мощный занос на мопсе!",
+        "Газ в пол, уретра горит!"
+    ];
+
+    const colors = ["#2ed573", "#ff4757", "#ffa502", "#1e90ff", "#9b59b6", "#00d2d3"];
+
+    function doRandomAction() {
+        const randPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+        const randColor = colors[Math.floor(Math.random() * colors.length)];
+        
+        const out = document.getElementById("output");
+        out.textContent = randPhrase;
+        out.style.color = randColor;
+    }
+</script>
 
 </body>
 </html>
