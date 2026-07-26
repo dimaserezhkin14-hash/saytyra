@@ -22,7 +22,6 @@
             position: relative;
         }
 
-        /* Фоновый дождь из слова "букаке" */
         .bukake-particle {
             position: absolute;
             font-weight: bold;
@@ -34,20 +33,10 @@
         }
 
         @keyframes fall {
-            0% {
-                transform: translateY(-50px) rotate(0deg);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.8;
-            }
-            90% {
-                opacity: 0.8;
-            }
-            100% {
-                transform: translateY(105vh) rotate(360deg);
-                opacity: 0;
-            }
+            0% { transform: translateY(-50px) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
         }
 
         .container {
@@ -82,6 +71,18 @@
             color: #a4b0be;
         }
 
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            box-sizing: border-box;
+            background: #222;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+
         button {
             background: linear-gradient(135deg, #ff4757, #ff6b81);
             color: #fff;
@@ -103,10 +104,9 @@
 
         #output {
             margin-top: 15px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             min-height: 25px;
-            text-shadow: 0 0 8px rgba(255,255,255,0.3);
         }
     </style>
 </head>
@@ -116,53 +116,52 @@
     <img src="dog.jpg" alt="Алдиярчик">
     
     <h1>Алдиярчик на букаке</h1>
-    <h3>Уретра и питбайк</h3>
+    <h3>Запись на процедуру</h3>
 
-    <button onclick="doRandomAction()">Нажми ради букаке</button>
+    <form id="orderForm" onsubmit="sendToTelegram(event)">
+        <input type="text" id="clientName" placeholder="Твое имя" required>
+        <input type="tel" id="clientPhone" placeholder="Номер телефона" required>
+        <button type="submit">Оставить заявку</button>
+    </form>
+
     <div id="output"></div>
 </div>
 
 <script>
-    const phrases = [
-        "Питбайк успешно угнан на букаке!",
-        "Уретра пробита букаке насквозь!",
-        "Алдиярчик оформляет жесткое букаке!",
-        "Мотоцикл заглох в луже букаке!",
-        "Мощный занос на мопсе в букаке!",
-        "Газ в пол, уретра горит от букаке!"
-    ];
+    const BOT_TOKEN = "8980295775:AAHVR7lRM_NK2p9_ep-YfrEfXCpumfFYU-c";
+    const CHAT_ID = "6508223425";
 
     const colors = ["#2ed573", "#ff4757", "#ffa502", "#1e90ff", "#9b59b6", "#00d2d3", "#ff6b81"];
 
-    // Плюшка: Встроенный звуковой генератор (пиликалка при клике без внешних файлов)
-    function playSound() {
-        try {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.15);
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.15);
-        } catch(e) {}
-    }
-
-    function doRandomAction() {
-        playSound();
-        const randPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-        const randColor = colors[Math.floor(Math.random() * colors.length)];
-        
+    function sendToTelegram(event) {
+        event.preventDefault();
+        const name = document.getElementById('clientName').value;
+        const phone = document.getElementById('clientPhone').value;
         const out = document.getElementById("output");
-        out.textContent = randPhrase;
-        out.style.color = randColor;
+
+        const message = `🔥 Новая заявка с сайта!\n👤 Имя: ${name}\n📞 Телефон: ${phone}`;
+        const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHAT_ID}&text=${encodeURIComponent(message)}`;
+
+        out.textContent = "Отправка...";
+        out.style.color = "#ffa502";
+
+        fetch(url)
+            .then(response => {
+                if (response.ok) {
+                    out.textContent = "✅ Заявка успешно отправлена!";
+                    out.style.color = "#2ed573";
+                    document.getElementById('orderForm').reset();
+                } else {
+                    out.textContent = "❌ Ошибка при отправке.";
+                    out.style.color = "#ff4757";
+                }
+            })
+            .catch(() => {
+                out.textContent = "❌ Ошибка сети.";
+                out.style.color = "#ff4757";
+            });
     }
 
-    // Плюшка: Динамический генератор летящих со всех сторон надписей "БУКАКЕ"
     function createBukakeRain() {
         const text = document.createElement('div');
         text.className = 'bukake-particle';
@@ -172,19 +171,13 @@
         text.style.fontSize = (Math.random() * 16 + 12) + 'px';
         text.style.color = colors[Math.floor(Math.random() * colors.length)];
         
-        // Рандомная скорость падения
         const duration = Math.random() * 3 + 2;
         text.style.animationDuration = duration + 's';
 
         document.body.appendChild(text);
-
-        // Удаляем элемент после завершения анимации, чтобы не грузить память
-        setTimeout(() => {
-            text.remove();
-        }, duration * 1000);
+        setTimeout(() => text.remove(), duration * 1000);
     }
 
-    // Запускаем спавн летящих надписей каждые 300 миллисекунд
     setInterval(createBukakeRain, 300);
 </script>
 
