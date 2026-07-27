@@ -41,7 +41,6 @@
     <div class="header">
         <h1>🛡 Гарант Сервис</h1>
         <p style="font-size: 12px; color: var(--text-muted);">Безопасные сделки с NFT подарками</p>
-        <!-- КНОПКА ПОДДЕРЖКИ В АПКЕ (ОТПРАВЛЯЕТ СИГНАЛ В ГРУППУ) -->
         <button type="button" class="support-btn-header" onclick="callSupport()">💬 Вызвать поддержку</button>
     </div>
 
@@ -71,10 +70,14 @@
         </div>
 
         <div id="sellerStep3" class="card hidden">
-            <div class="card-title"><span>🎉 Сделка создана!</span><span class="badge success">Ожидает проверки</span></div>
-            <div class="instruction">Заявка отправлена гаранту. Передайте эту ссылку покупателю:</div>
+            <div class="card-title">
+                <span>🎉 Сделка создана!</span>
+                <span class="badge warning" id="statusBadge">Проверка гарантом...</span>
+            </div>
+            <div class="instruction" id="statusInstruction">Ожидаем, пока гарант подтвердит получение гифта в Telegram...</div>
+            
             <div class="action-box" onclick="copyBuyerLink()">
-                <div style="font-size: 11px; color: var(--text-muted);">Персональная ссылка покупателя:</div>
+                <div style="font-size: 11px; color: var(--text-muted);">Ссылка для покупателя:</div>
                 <div class="value" id="buyerLinkText">Создаем ссылку...</div>
             </div>
             <button type="button" class="btn btn-secondary" onclick="copyBuyerLink()">📋 Скопировать ссылку</button>
@@ -105,14 +108,17 @@
 
         const BOT_TOKEN = "8987632200:AAG2bS9DJy9sGzuUdAZ-kiuZZB0jNXVeo3Y";
         const GROUP_ID = "-1003589174040";
-        const BACKEND_URL = "http://localhost:8080"; // 👈 Укажите адрес вашего запущенного бэкенда на сервере
+        const BACKEND_URL = "http://localhost:8080"; // 👈 Адрес твоего запущенного бот-сервера
+        let currentDealId = null;
         let generatedBuyerLink = "";
+        let pollInterval = null;
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const payParam = urlParams.get('pay_data');
 
             if (payParam) {
+                // Если открыл покупатель
                 document.getElementById('sellerView').classList.add('hidden');
                 document.getElementById('buyerView').classList.remove('hidden');
                 try {
@@ -124,8 +130,10 @@
                     document.getElementById('rComment').textContent = 'Комментарий: ' + (data.comment || 'Нет');
                 } catch(e) { console.error(e); }
             } else {
-                // Восстанавливаем состояние продавца из памяти, чтобы не сбрасывалось при перезаходе
+                // Восстановление состояния продавца
                 const savedStep = localStorage.getItem('seller_step');
+                currentDealId = localStorage.getItem('current_deal_id');
+
                 if (savedStep === '2') {
                     document.getElementById('sellerStep1').classList.add('hidden');
                     document.getElementById('sellerStep2').classList.remove('hidden');
@@ -134,6 +142,9 @@
                     document.getElementById('sellerStep3').classList.remove('hidden');
                     generatedBuyerLink = localStorage.getItem('buyer_link') || '';
                     document.getElementById('buyerLinkText').textContent = generatedBuyerLink;
+                    
+                    // Запускаем отслеживание статуса
+                    startStatusPolling(currentDealId);
                 }
             }
         };
@@ -159,7 +170,7 @@
             btn.disabled = true;
             btn.textContent = "⏳ Отправка...";
 
-            const dealId = Math.floor(1000 + Math.random() * 9000);
+            currentDealId = Math.floor(1000 + Math.random() * 9000).toString();
             const gift = document.getElementById('giftName').value.trim();
             const price = document.getElementById('giftPrice').value.trim();
             const bank = document.getElementById('payBank').value.trim();
@@ -169,35 +180,27 @@
             const user = tg.initDataUnsafe?.user;
             const username = user ? (user.username ? '@' + user.username : user.first_name) : 'Продавец';
 
-            generatedBuyerLink = `https://t.me/GuarantMiniApp_bot?start=deal_${dealId}`;
+            generatedBuyerLink = `https://t.me/GuarantMiniApp_bot?start=deal_${currentDealId}`;
 
-            // 1. Регистрируем сделку в боте
+            // 1. Регистрируем сделку
             try {
                 await fetch(`${BACKEND_URL}/register_deal`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        deal_id: dealId, gift: gift, price: price,
+                        deal_id: currentDealId, gift: gift, price: price,
                         bank: bank, card: card, comment: comment, seller: username
                     })
                 });
-            } catch (e) {
-                console.log("Ошибка бэкенда регистрации сделки");
-            }
+            } catch (e) { console.log(e); }
 
-            // 2. Отправляем уведомление в группу админам
+            // 2. Уведомляем группу
             const groupText = `📤 <b>ПРОДАВЕЦ ОТПРАВИЛ АКТИВЫ НА ПРОВЕРКУ!</b>\n\n` +
-                              `🆔 <b>Сделка:</b> #${dealId}\n` +
+                              `🆔 <b>Сделка:</b> #${currentDealId}\n` +
                               `👤 <b>Продавец:</b> ${username}\n` +
                               `🎁 <b>Подарок:</b> ${gift}\n` +
                               `💰 <b>Сумма:</b> ${price} ₽\n\n` +
                               `👉 Подтвердите получение подарка:`;
-
-            const replyMarkup = {
-                inline_keyboard: [
-                    [{ text: "✅ Подтвердить получение активов", callback_data: `admin_confirm_${dealId}` }]
-                ]
-            };
 
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -207,23 +210,51 @@
                         chat_id: GROUP_ID,
                         text: groupText,
                         parse_mode: 'HTML',
-                        reply_markup: replyMarkup
+                        reply_markup: {
+                            inline_keyboard: [[{ text: "✅ Подтвердить получение активов", callback_data: `admin_confirm_${currentDealId}` }]]
+                        }
                     })
                 });
 
-                // Сохраняем состояние в память браузера
                 localStorage.setItem('seller_step', '3');
+                localStorage.setItem('current_deal_id', currentDealId);
                 localStorage.setItem('buyer_link', generatedBuyerLink);
 
                 document.getElementById('sellerStep2').classList.add('hidden');
                 document.getElementById('sellerStep3').classList.remove('hidden');
                 document.getElementById('buyerLinkText').textContent = generatedBuyerLink;
 
+                // Запускаем постоянный опрос статуса подтверждения
+                startStatusPolling(currentDealId);
+
             } catch (err) {
-                alert("Ошибка отправки: " + err);
+                alert("Ошибка: " + err);
                 btn.disabled = false;
                 btn.textContent = "✅ Я отправил активы";
             }
+        }
+
+        // Функция опроса статуса
+        function startStatusPolling(dealId) {
+            if (pollInterval) clearInterval(pollInterval);
+            
+            pollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`${BACKEND_URL}/check_status?deal_id=${dealId}`);
+                    const data = await res.json();
+                    
+                    if (data.status === 'confirmed') {
+                        // АДМИН ПОДТВЕРДИЛ! Обновляем UI у продавца
+                        const badge = document.getElementById('statusBadge');
+                        badge.className = 'badge success';
+                        badge.textContent = 'Активы у гаранта!';
+                        
+                        document.getElementById('statusInstruction').innerHTML = '✅ <b>Гарант подтвердил получение подарка!</b> Передайте ссылку покупателю для оплаты:';
+                        
+                        clearInterval(pollInterval); // Останавливаем опрос
+                    }
+                } catch(e) { console.log(e); }
+            }, 2000); // Каждые 2 секунды
         }
 
         async function callSupport() {
@@ -237,22 +268,18 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: username, user_id: userId })
                 });
-                alert("Запрос отправлен! Администратор свяжется с вами в ближайшее время.");
+                alert("Запрос отправлен в группу поддержки!");
             } catch (e) {
-                alert("Не удалось отправить запрос в поддержку. Попробуйте позже.");
+                alert("Ошибка при вызове поддержки.");
             }
         }
 
         function copyBuyerLink() {
-            navigator.clipboard.writeText(generatedBuyerLink).then(() => {
-                alert("Ссылка скопирована!");
-            });
+            navigator.clipboard.writeText(generatedBuyerLink).then(() => alert("Ссылка скопирована!"));
         }
 
         function copyText(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert("Скопировано: " + text);
-            });
+            navigator.clipboard.writeText(text).then(() => alert("Скопировано: " + text));
         }
     </script>
 </body>
