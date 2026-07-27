@@ -2,251 +2,110 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CYBER AUTO</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Telegram Mini App</title>
+    <!-- Подключение библиотеки Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        :root { --bg-dark: #08090c; --card-bg: rgba(18, 22, 31, 0.75); --card-border: rgba(255, 255, 255, 0.08); --neon-amber: #ff9f1c; --neon-blue: #00f0ff; --text-main: #f0f4f8; --text-sub: #8c9ba5; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
-        body { background-color: var(--bg-dark); color: var(--text-main); overflow-x: hidden; position: relative; }
-        #bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
-        .grid-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px); background-size: 40px 40px; z-index: -1; pointer-events: none; }
-        header { position: fixed; top: 15px; left: 50%; transform: translateX(-50%); width: 92%; max-width: 1100px; background: rgba(12, 15, 22, 0.85); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 20px; padding: 12px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; box-shadow: 0 15px 35px rgba(0,0,0,0.6); }
-        .logo { font-family: 'Orbitron', sans-serif; font-size: 20px; font-weight: 900; background: linear-gradient(45deg, var(--neon-amber), var(--neon-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 10px; }
-        .logo i { color: var(--neon-amber); -webkit-text-fill-color: initial; filter: drop-shadow(0 0 8px var(--neon-amber)); }
-        .nav-links { display: flex; gap: 20px; list-style: none; }
-        .nav-links a { color: var(--text-sub); text-decoration: none; font-size: 14px; font-weight: 600; }
-        .header-btn { background: linear-gradient(135deg, var(--neon-amber), #e67e22); color: #000; padding: 8px 18px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 13px; text-transform: uppercase; }
-        .hero { padding-top: 150px; padding-bottom: 50px; display: flex; flex-direction: column; align-items: center; text-align: center; max-width: 900px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
-        .hero-badge { background: rgba(0, 240, 255, 0.05); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 8px 20px; border-radius: 30px; font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 25px; box-shadow: 0 0 15px rgba(0, 240, 255, 0.25); }
-        .hero h1 { font-family: 'Orbitron', sans-serif; font-size: clamp(32px, 5vw, 60px); font-weight: 900; line-height: 1.15; margin-bottom: 20px; text-transform: uppercase; }
-        .gradient-orange-cyan { background: linear-gradient(180deg, var(--neon-amber) 0%, var(--neon-blue) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero p { font-size: 16px; color: var(--text-sub); max-width: 600px; margin-bottom: 35px; line-height: 1.6; }
-        .hero-cta { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 450px; }
-        .btn-primary { background: linear-gradient(135deg, var(--neon-amber), #ff6b00); color: #000; padding: 16px 28px; border-radius: 14px; font-weight: 800; font-size: 15px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; flex: 1; min-width: 200px; }
-        .btn-secondary { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border); color: #fff; padding: 16px 28px; border-radius: 14px; font-weight: 700; font-size: 15px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; flex: 1; min-width: 200px; }
-        .container { max-width: 1100px; margin: 0 auto; padding: 60px 20px; }
-        .section-header { text-align: center; margin-bottom: 45px; }
-        .section-tag { color: var(--neon-amber); font-family: 'Orbitron', sans-serif; font-size: 12px; letter-spacing: 2px; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; display: block; }
-        .section-title { font-size: 32px; font-weight: 800; background: linear-gradient(180deg, #fff, #a0aab5); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
-        .tilt-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 30px 22px; position: relative; backdrop-filter: blur(20px); transition: transform 0.1s ease; transform-style: preserve-3d; cursor: pointer; }
-        .card-icon { width: 55px; height: 55px; background: rgba(255, 159, 28, 0.05); border: 1px solid var(--neon-amber); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: var(--neon-amber); margin-bottom: 20px; }
-        .card-title { font-size: 18px; font-weight: 800; margin-bottom: 10px; }
-        .card-desc { color: var(--text-sub); font-size: 14px; line-height: 1.5; }
-        .calculator-wrapper { background: rgba(15, 18, 26, 0.85); border: 1px solid var(--card-border); border-radius: 24px; padding: 30px; backdrop-filter: blur(20px); display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        @media (max-width: 800px) { .calculator-wrapper { grid-template-columns: 1fr; } .nav-links { display: none; } }
-        .calc-group { margin-bottom: 20px; }
-        .calc-label { font-size: 13px; font-weight: 700; color: var(--text-sub); margin-bottom: 10px; display: block; text-transform: uppercase; }
-        .chip-selector { display: flex; flex-wrap: wrap; gap: 10px; }
-        .chip { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--card-border); padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .chip.active { background: rgba(0, 240, 255, 0.15); border-color: var(--neon-blue); color: var(--neon-blue); }
-        .slider-box { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border); border-radius: 14px; padding: 15px; }
-        .slider-header { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; font-weight: 700; }
-        .range-slider { width: 100%; -webkit-appearance: none; height: 6px; border-radius: 5px; background: #1e2430; outline: none; }
-        .range-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--neon-amber); cursor: pointer; }
-        .calc-result-box { background: linear-gradient(135deg, rgba(255, 159, 28, 0.08), rgba(0, 240, 255, 0.05)); border: 1px solid rgba(255, 159, 28, 0.2); border-radius: 18px; padding: 25px; display: flex; flex-direction: column; justify-content: space-between; text-align: center; }
-        .result-title { font-size: 14px; color: var(--text-sub); text-transform: uppercase; margin-bottom: 10px; }
-        .result-price { font-family: 'Orbitron', sans-serif; font-size: clamp(32px, 4vw, 46px); font-weight: 900; color: var(--neon-amber); margin-bottom: 15px; }
-        .result-details { list-style: none; margin-bottom: 20px; text-align: left; }
-        .result-details li { font-size: 13px; color: var(--text-sub); padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center; gap: 8px; }
-        .result-details li i { color: var(--neon-blue); }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; padding: 20px; }
-        .modal-body { background: #0d1117; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 20px; padding: 25px; width: 100%; max-width: 380px; position: relative; }
-        .modal-close { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-sub); font-size: 20px; cursor: pointer; }
-        .field { margin-bottom: 15px; }
-        .field label { display: block; font-size: 11px; color: var(--neon-blue); margin-bottom: 6px; text-transform: uppercase; font-weight: bold; }
-        .field input, .field textarea { width: 100%; padding: 12px; background: #06080c; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; outline: none; }
-        footer { border-top: 1px solid var(--card-border); padding: 30px 20px; text-align: center; color: var(--text-sub); font-size: 13px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #121214;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: #1e1e24;
+            border: 1px solid #2d2d38;
+            border-radius: 20px;
+            padding: 28px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #0088cc, #005588);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto 20px;
+        }
+
+        h1 {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        p {
+            font-size: 14px;
+            color: #9a9ab0;
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: #0088cc;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+            background: #0077b5;
+        }
     </style>
 </head>
 <body>
-    <canvas id="bg-canvas"></canvas>
-    <div class="grid-overlay"></div>
-    <header>
-        <div class="logo"><i class="fa-solid fa-gauge-high"></i> CYBER AUTO</div>
-        <ul class="nav-links">
-            <li><a href="#services">Услуги</a></li>
-            <li><a href="#calculator">Калькулятор</a></li>
-        </ul>
-        <a href="javascript:void(0)" onclick="openModal()" class="header-btn">Записаться</a>
-    </header>
-    <section class="hero">
-        <div class="hero-badge">⚡ ИИ-ДИАГНОСТИКА & ПРЕМИУМ РЕМОНТ</div>
-        <h1>АВТОСЕРВИС<br><span class="gradient-orange-cyan">НОВОГО ПОКОЛЕНИЯ</span></h1>
-        <p>Интерактивная диагностика, максимальная точность расчетов и высочайший стандарт обслуживания вашего автомобиля.</p>
-        <div class="hero-cta">
-            <button class="btn-primary" onclick="openModal()"><i class="fa-solid fa-calculator"></i> Рассчитать стоимость</button>
-            <button class="btn-secondary" onclick="document.getElementById('services').scrollIntoView({behavior: 'smooth'})"><i class="fa-solid fa-layer-group"></i> Все услуги</button>
-        </div>
-    </section>
-    <div class="container" id="services">
-        <div class="section-header">
-            <span class="section-tag">// Наши возможности</span>
-            <h2 class="section-title">Премиальные Услуги</h2>
-        </div>
-        <div class="services-grid">
-            <div class="tilt-card">
-                <div class="card-icon"><i class="fa-solid fa-microchip"></i></div>
-                <h3 class="card-title">ИИ Диагностика</h3>
-                <p class="card-desc">Полный сканер электронных блоков, выявление скрытых микро-ошибок и предиктивный анализ износа деталей.</p>
-            </div>
-            <div class="tilt-card">
-                <div class="card-icon"><i class="fa-solid fa-gears"></i></div>
-                <h3 class="card-title">Ремонт ДВС и КПП</h3>
-                <p class="card-desc">Капитальный ремонт агрегатов с высокоточной подгонкой допускных зазоров и оригинальными комплектующими.</p>
-            </div>
-            <div class="tilt-card">
-                <div class="card-icon"><i class="fa-solid fa-shield-halved"></i></div>
-                <h3 class="card-title">Тормозная Система</h3>
-                <p class="card-desc">Установка спортивных систем, проточка дисков и замена рабочих жидкостей под давлением.</p>
-            </div>
-            <div class="tilt-card">
-                <div class="card-icon"><i class="fa-solid fa-oil-can"></i></div>
-                <h3 class="card-title">Экспресс ТО</h3>
-                <p class="card-desc">Замена масла и фильтров за 25 минут по чек-листу из 40 пунктов с гарантией.</p>
-            </div>
-        </div>
+
+    <div class="container">
+        <div class="user-avatar" id="avatar">👋</div>
+        <h1 id="greeting">Привет!</h1>
+        <p>Добро пожаловать в приложение. Вы успешно перешли по кнопке из группы.</p>
+        
+        <button class="btn" onclick="closeApp()">Закрыть приложение</button>
     </div>
-    <div class="container" id="calculator">
-        <div class="section-header">
-            <span class="section-tag">// Онлайн Расчет</span>
-            <h2 class="section-title">Интерактивный Калькулятор</h2>
-        </div>
-        <div class="calculator-wrapper">
-            <div class="calc-inputs">
-                <div class="calc-group">
-                    <span class="calc-label">1. Класс Автомобиля</span>
-                    <div class="chip-selector" id="car-chips">
-                        <div class="chip active" data-factor="1.0"><i class="fa-solid fa-car-side"></i> Седан</div>
-                        <div class="chip" data-factor="1.35"><i class="fa-solid fa-truck-pickup"></i> Кроссовер</div>
-                        <div class="chip" data-factor="1.65"><i class="fa-solid fa-truck-monster"></i> Внедорожник</div>
-                    </div>
-                </div>
-                <div class="calc-group">
-                    <span class="calc-label">2. Услуги</span>
-                    <div class="chip-selector" id="service-chips">
-                        <div class="chip active" data-price="2500"><i class="fa-solid fa-check"></i> Диагностика</div>
-                        <div class="chip" data-price="3500"><i class="fa-solid fa-check"></i> Замена масла</div>
-                        <div class="chip" data-price="4500"><i class="fa-solid fa-check"></i> Тормоза</div>
-                    </div>
-                </div>
-                <div class="calc-group">
-                    <div class="slider-box">
-                        <div class="slider-header">
-                            <span>Срочность</span>
-                            <span id="urgency-text" style="color: var(--neon-amber);">Стандарт (24ч)</span>
-                        </div>
-                        <input type="range" min="1" max="3" value="1" class="range-slider" id="urgency-range">
-                    </div>
-                </div>
-            </div>
-            <div class="calc-result-box">
-                <div>
-                    <div class="result-title">Итоговая Стоимость</div>
-                    <div class="result-price" id="total-price-display">2 500 ₽</div>
-                    <ul class="result-details">
-                        <li><i class="fa-solid fa-circle-check"></i> Гарантия 12 месяцев</li>
-                        <li><i class="fa-solid fa-circle-check"></i> Бесплатная мойка</li>
-                    </ul>
-                </div>
-                <button class="btn-primary" onclick="openModal()" style="width: 100%;"><i class="fa-solid fa-bolt"></i> Записаться по этой цене</button>
-            </div>
-        </div>
-    </div>
-    <div class="modal" id="modal">
-        <div class="modal-body">
-            <button class="modal-close" onclick="closeModal()">✕</button>
-            <h3 style="margin-bottom: 15px; text-align: center;">Онлайн Запись</h3>
-            <form id="tgForm">
-                <div class="field">
-                    <label>Ваше Имя</label>
-                    <input type="text" id="uName" placeholder="Иван" required>
-                </div>
-                <div class="field">
-                    <label>Контакты</label>
-                    <input type="text" id="uContact" placeholder="Телефон или @telegram" required>
-                </div>
-                <div class="field">
-                    <label>Марка Авто / Примечание</label>
-                    <textarea id="uComment" rows="2" placeholder="BMW M5, хочу замену масла"></textarea>
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;"><i class="fa-solid fa-paper-plane"></i> Отправить Заявку</button>
-            </form>
-            <div id="stText" style="text-align: center; margin-top: 10px; font-size: 13px;"></div>
-        </div>
-    </div>
-    <footer><p>&copy; 2026 CYBER AUTO. Все права защищены.</p></footer>
-        <script>
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        function initCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', initCanvas);
-        initCanvas();
-        class Particle {
-            constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 2 + 0.5; this.speedY = -Math.random() * 0.4 - 0.1; this.speedX = (Math.random() - 0.5) * 0.2; this.opacity = Math.random() * 0.5 + 0.2; }
-            update() { this.y += this.speedY; this.x += this.speedX; if (this.y < 0) { this.y = canvas.height; this.x = Math.random() * canvas.width; } }
-            draw() { ctx.fillStyle = `rgba(255, 159, 28, ${this.opacity})`; ctx.shadowBlur = 6; ctx.shadowColor = "#ff9f1c"; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+
+    <script>
+        // Инициализация Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачивает окно на весь экран
+
+        // Получение данных пользователя из Telegram
+        const user = tg.initDataUnsafe?.user;
+
+        if (user) {
+            const name = user.first_name || "Пользователь";
+            document.getElementById('greeting').textContent = `Привет, ${name}!`;
         }
-        for (let i = 0; i < 40; i++) particles.push(new Particle());
-        function loop() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(loop); }
-        loop();
-        document.querySelectorAll('.tilt-card').forEach(card => {
-            card.addEventListener('mousemove', e => {
-                const rect = card.getBoundingClientRect();
-                const x = e.clientX - rect.left - rect.width / 2;
-                const y = e.clientY - rect.top - rect.height / 2;
-                card.style.transform = `perspective(1000px) rotateX(${-y / 10}deg) rotateY(${x / 10}deg) scale3d(1.02, 1.02, 1.02)`;
-            });
-            card.addEventListener('mouseleave', () => { card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)'; });
-        });
-        let carFactor = 1.0;
-        let urgencyFactor = 1.0;
-        document.querySelectorAll('#car-chips .chip').forEach(chip => {
-            chip.addEventListener('click', () => { document.querySelectorAll('#car-chips .chip').forEach(c => c.classList.remove('active')); chip.classList.add('active'); carFactor = parseFloat(chip.dataset.factor); calcPrice(); });
-        });
-        document.querySelectorAll('#service-chips .chip').forEach(chip => {
-            chip.addEventListener('click', () => { chip.classList.toggle('active'); calcPrice(); });
-        });
-        const uRange = document.getElementById('urgency-range');
-        const uText = document.getElementById('urgency-text');
-        uRange.addEventListener('input', (e) => {
-            const val = parseInt(e.target.value);
-            if(val === 1) { uText.innerText = 'Стандарт (24ч)'; urgencyFactor = 1.0; }
-            else if(val === 2) { uText.innerText = 'Ускоренно (6ч)'; urgencyFactor = 1.25; }
-            else { uText.innerText = 'Срочно (2ч)'; urgencyFactor = 1.5; }
-            calcPrice();
-        });
-        function calcPrice() {
-            let base = 0;
-            document.querySelectorAll('#service-chips .chip.active').forEach(c => { base += parseInt(c.dataset.price); });
-            const total = Math.round(base * carFactor * urgencyFactor);
-            document.getElementById('total-price-display').innerText = total.toLocaleString('ru-RU') + ' ₽';
+
+        function closeApp() {
+            tg.close(); // Закрывает Mini App
         }
-        function openModal() { document.getElementById('modal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('modal').style.display = 'none'; }
-        const BOT_TOKEN = "8980295775:AAHVR7lRM_NK2p9_ep-YfrEfXCpumfFYU-c";
-        const CHAT_ID = "6508223425";
-        document.getElementById('tgForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const status = document.getElementById('stText');
-            status.style.color = '#fff';
-            status.innerText = 'Отправка...';
-            const name = document.getElementById('uName').value;
-            const contact = document.getElementById('uContact').value;
-            const comment = document.getElementById('uComment').value;
-            const price = document.getElementById('total-price-display').innerText;
-            const text = `🚗 *Заявка CYBER AUTO*\n\n👤 *Имя:* ${name}\n📱 *Контакт:* ${contact}\n💬 *Марка/Заметка:* ${comment}\n💰 *Ориентировочная цена:* ${price}`;
-            try {
-                const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'Markdown' }) });
-                if (res.ok) { status.style.color = '#00f0ff'; status.innerText = '✅ Успешно отправлено!'; setTimeout(() => { closeModal(); document.getElementById('tgForm').reset(); status.innerText = ''; }, 1500); }
-                else { throw new Error(); }
-            } catch (err) { status.style.color = '#ff4444'; status.innerText = '❌ Ошибка при отправке!'; }
-        });
     </script>
+
 </body>
 </html>
