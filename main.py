@@ -1,11 +1,20 @@
 import os
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 app = FastAPI()
 
-# База данных тестовых карточек
+# Разрешаем запрос с любого источника (включая GitHub Pages)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 items_db = [
     {
         "id": 1,
@@ -42,7 +51,7 @@ class VoteRequest(BaseModel):
 async def read_root():
     if os.path.exists("index.html"):
         return FileResponse("index.html")
-    raise HTTPException(status_code=404, detail="index.html not found")
+    return {"status": "API is working"}
 
 @app.get("/api/items")
 async def get_items():
