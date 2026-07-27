@@ -19,180 +19,31 @@
             --danger: #ef4444;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            min-height: 100vh;
-        }
-
-        .header {
-            text-align: center;
-            padding: 10px 0;
-        }
-
-        .header h1 {
-            font-size: 20px;
-            font-weight: 800;
-            background: linear-gradient(135deg, #fff, #8b94a5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .header p {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        .card-title {
-            font-size: 17px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .form-group label {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-control {
-            background: #0b0c10;
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 14px;
-            color: #fff;
-            font-size: 15px;
-            outline: none;
-            transition: 0.2s;
-        }
-
-        .form-control:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-glow);
-        }
-
-        .action-box {
-            background: rgba(46, 166, 255, 0.05);
-            border: 1px dashed var(--accent);
-            border-radius: 14px;
-            padding: 14px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .action-box:active {
-            background: rgba(46, 166, 255, 0.15);
-        }
-
-        .action-box .value {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--accent);
-            margin-top: 4px;
-            word-break: break-all;
-        }
-
-        .instruction {
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        .instruction b {
-            color: var(--text-main);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            background: var(--accent);
-            color: #fff;
-            transition: 0.2s;
-            box-shadow: 0 4px 16px var(--accent-glow);
-            text-align: center;
-        }
-
-        .btn:active {
-            transform: scale(0.98);
-            opacity: 0.9;
-        }
-
-        .btn-success {
-            background: var(--success);
-            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.2);
-            color: #0b0c10;
-        }
-
-        .btn-danger {
-            background: transparent;
-            border: 1px solid var(--danger);
-            color: var(--danger);
-            box-shadow: none;
-        }
-
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 16px; display: flex; flex-direction: column; gap: 16px; min-height: 100vh; }
+        .header { text-align: center; padding: 10px 0; }
+        .header h1 { font-size: 20px; font-weight: 800; }
+        .header p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+        .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+        .card-title { font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .form-control { background: #0b0c10; border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; color: #fff; font-size: 14px; outline: none; width: 100%; }
+        .form-control:focus { border-color: var(--accent); }
+        .action-box { background: rgba(46, 166, 255, 0.05); border: 1px dashed var(--accent); border-radius: 14px; padding: 14px; text-align: center; cursor: pointer; }
+        .action-box .value { font-size: 14px; font-weight: 700; color: var(--accent); margin-top: 4px; word-break: break-all; }
+        .instruction { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+        .instruction b { color: var(--text-main); }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; text-align: center; }
+        .btn-success { background: var(--success); color: #0b0c10; }
+        .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+        .info-row { display: flex; justify-content: space-between; font-size: 13px; }
         .info-row .label { color: var(--text-muted); }
         .info-row .val { font-weight: 600; }
-
-        hr {
-            border: 0;
-            border-top: 1px solid var(--card-border);
-        }
-
-        .badge {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-        }
+        hr { border: 0; border-top: 1px solid var(--card-border); }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
         .badge.success { background: rgba(34, 197, 94, 0.15); color: var(--success); }
-
         .hidden { display: none !important; }
         .text-center { text-align: center; }
     </style>
@@ -204,159 +55,144 @@
         <p>Безопасные сделки с NFT подарками</p>
     </div>
 
-    <!-- ================= ИНТЕРФЕЙС ПРОДАВЦА (СОЗДАНИЕ СДЕЛКИ) ================= -->
+    <!-- ИНТЕРФЕЙС ПРОДАВЦА -->
     <div id="sellerView">
-        <!-- Шаг 1: Форма создания -->
         <div id="sellerStep1" class="card">
-            <div class="card-title">📦 Новая сделка (Только для продавцов)</div>
+            <div class="card-title">📦 Создание сделки</div>
             <div class="form-group">
                 <label>Название подарка</label>
                 <input type="text" class="form-control" id="giftName" placeholder="Например: Владосик Мишка">
             </div>
             <div class="form-group">
-                <label>Сумма сделки (в рублях)</label>
-                <input type="number" class="form-control" id="giftPrice" placeholder="1500" oninput="calcTotal()">
+                <label>Сумма к оплате (в рублях)</label>
+                <input type="number" class="form-control" id="giftPrice" placeholder="1500">
             </div>
-            <div class="info-row">
-                <span class="label">Вы получите:</span>
-                <span class="val" id="sellerGetAmount">0 ₽</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Комиссия передачи:</span>
-                <span class="val" style="color: var(--warning);">2 мишки</span>
-            </div>
-            <button class="btn" onclick="createDeal()">Создать персональную сделку</button>
-        </div>
-
-        <!-- Шаг 2: Ссылка на сделку получена -->
-        <div id="sellerStep2" class="card hidden">
-            <div class="card-title">🔗 Ссылка на сделку создана</div>
-            <div class="instruction">Отправьте эту <b>личную ссылку</b> покупателю. По ней он увидит статус сделки и реквизиты:</div>
             
-            <div class="action-box" onclick="copyText(document.getElementById('personalDealLink').textContent)">
-                <div style="font-size: 11px; color: var(--text-muted);">Нажмите, чтобы скопировать:</div>
-                <div class="value" id="personalDealLink">https://t.me/GuarantMiniApp_bot?start=deal_0000</div>
+            <hr>
+            <div style="font-size: 13px; font-weight: 700; color: var(--accent);">Куда покупатель должен перевести деньги?</div>
+            
+            <div class="form-group">
+                <label>Банк</label>
+                <input type="text" class="form-control" id="payBank" placeholder="Сбер / Т-Банк / СБП">
+            </div>
+            <div class="form-group">
+                <label>Номер карты или телефона</label>
+                <input type="text" class="form-control" id="payCard" placeholder="+7 999 000-00-00">
+            </div>
+            <div class="form-group">
+                <label>Комментарий к переводу (по желанию)</label>
+                <input type="text" class="form-control" id="payComment" placeholder="Например: за подарок">
             </div>
 
-            <button class="btn" onclick="sellerGoToDeposit()">Перейти к заморозке подарка</button>
+            <button class="btn" onclick="createDeal()">Сгенерировать сделку</button>
         </div>
 
-        <!-- Шаг 3: Отправка на аккаунт гаранта -->
+        <div id="sellerStep2" class="card hidden">
+            <div class="card-title">🔗 Персональная ссылка</div>
+            <div class="instruction">Отправьте эту ссылку покупателю:</div>
+            <div class="action-box" onclick="copyText(document.getElementById('personalDealLink').textContent)">
+                <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования:</div>
+                <div class="value" id="personalDealLink"></div>
+            </div>
+            <button class="btn" onclick="sellerGoToDeposit()">Перейти к отправке подарка</button>
+        </div>
+
         <div id="sellerStep3" class="card hidden">
             <div class="card-title">
-                <span>📤 Заморозка активов</span>
-                <span class="badge warning">Шаг 1</span>
+                <span>📤 Передача активов</span>
+                <span class="badge warning">Ожидание админа</span>
             </div>
             <div class="instruction">
-                1. Отправьте подарок <b><span id="targetGiftName">Мишка</span></b> и <b>2 мишки</b> (комиссия) на официальный аккаунт:
+                1. Отправьте подарок и 2 мишки (комиссию) на аккаунт гаранта:
             </div>
             <div class="action-box" onclick="copyText('@GuarantRelayer')">
                 <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования аккаунта:</div>
                 <div class="value">@GuarantRelayer</div>
             </div>
             <div class="instruction">
-                2. После отправки нажмите кнопку ниже. Покупатель увидит, что актив заморожен.
+                2. После отправки нажмите кнопку ниже. <b>Администратор в группе проверит поступление и подтвердит сделку.</b>
             </div>
-            <button class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил подарок и 2 мишки</button>
+            <button class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил активы гаранту</button>
             <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка</button>
         </div>
 
-        <!-- Шаг 4: Ожидание оплаты -->
         <div id="sellerStep4" class="card hidden text-center">
-            <div class="card-title">⏳ Ожидание оплаты от покупателя</div>
-            <div class="instruction">
-                Подарок заморожен на гаранте.<br>Ждем, пока покупатель переведет деньги на ваши реквизиты и подтвердит оплату.
-            </div>
+            <div class="card-title">⏳ Ожидание оплаты</div>
+            <div class="instruction">Активы на проверке / заморожены. Ждем оплаты от покупателя.</div>
             <button class="btn btn-danger" onclick="openSupport()" style="margin-top: 10px;">🆘 Поддержка</button>
-        </div>
-
-        <!-- Шаг 5: Проверка денег продавцом -->
-        <div id="sellerStep5" class="card hidden">
-            <div class="card-title">💰 Проверьте поступление денег</div>
-            <div class="instruction">
-                Покупатель перевел средства на ваши реквизиты.<br>Проверьте свой банк. Если деньги пришли — подтверждайте.
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button class="btn btn-success" style="flex:1;" onclick="sellerConfirmedMoney()">💰 Деньги пришли</button>
-                <button class="btn btn-danger" style="flex:1;" onclick="openSupport()">🆘 Денег нет (Спор)</button>
-            </div>
         </div>
     </div>
 
-
-    <!-- ================= ИНТЕРФЕЙС ПОКУПАТЕЛЯ ================= -->
+    <!-- ИНТЕРФЕЙС ПОКУПАТЕЛЯ -->
     <div id="buyerNavView" class="card hidden">
         <div class="card-title">
             <span>🛡 Сделка <span id="buyerDealIdView">#0000</span></span>
-            <span class="badge warning" id="buyerStatusBadge">Ожидание продавца</span>
+            <span class="badge warning" id="buyerStatusBadge">Проверка гаранта</span>
         </div>
 
-        <div class="info-row"><span class="label">Подарок:</span><span class="val" id="bGiftName">—</span></div>
+        <div class="info-row"><span class="label">Подарок:</span><span class="val" id="bGiftName">Мишка</span></div>
         <div class="info-row"><span class="label">Сумма:</span><span class="val" style="color: var(--success);" id="bGiftPrice">0 ₽</span></div>
         <hr>
 
-        <!-- Статусные блоки для покупателя -->
         <div id="buyerStatusWaiting" class="instruction text-center">
-            ⏳ Продавец еще не передал подарок и комиссию на аккаунт <b>@GuarantRelayer</b>.<br>Как только передаст — здесь появятся реквизиты для оплаты.
+            ⏳ Продавец создает сделку. Ожидаем подтверждения от <b>админа в группе</b>, что продавец передал подарок и комиссию на аккаунт <b>@GuarantRelayer</b>.
         </div>
 
         <div id="buyerStatusReadyToPay" class="hidden">
             <div class="instruction" style="margin-bottom: 8px;">
-                ✅ <b>Продавец передал гифт гаранту!</b> Переведите указанную сумму на реквизиты продавца ниже:
+                ✅ <b>Администратор подтвердил передачу гифта!</b> Переведите деньги на реквизиты продавца:
             </div>
-            <div class="action-box" onclick="copyText('+79991234567')">
-                <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования реквизитов:</div>
-                <div class="value">+7 (999) 123-45-67 (Сбер/Т-Банк)</div>
+            <div class="action-box" style="margin-bottom: 10px;">
+                <div style="font-size: 12px; color: var(--text-muted);" id="rBank">Банк: Сбер</div>
+                <div class="value" id="rCard" style="font-size: 16px; user-select: text;">+79990000000</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="rComment">Комментарий: нет</div>
             </div>
-            <button class="btn btn-success" style="margin-top: 12px;" onclick="buyerPaidAction()">✅ Я перевел деньги продавцу</button>
+            <button class="btn btn-success" onclick="buyerPaidAction()">✅ Я перевел деньги продавцу</button>
         </div>
 
-        <div id="buyerStatusCheck" class="instruction text-center hidden">
-            ⏳ Вы подтвердили перевод. Ожидаем подтверждения получения от продавца...
-        </div>
-
-        <div id="buyerStatusFinished" class="instruction text-center hidden" style="color: var(--success); font-weight: 700;">
-            🎉 Оплата подтверждена! Бот переводит подарок на ваш аккаунт.
-        </div>
-
-        <button class="btn btn-danger" onclick="openSupport()" style="margin-top: 10px;">🆘 Поддержка (-1003589174040)</button>
+        <button class="btn btn-danger" onclick="openSupport()" style="margin-top: 10px;">🆘 Поддержка</button>
     </div>
-
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const GROUP_ID = "-1003589174040";
-        let activeDealId = Math.floor(1000 + Math.random() * 9000);
+        let dealId = Math.floor(1000 + Math.random() * 9000);
+        let currentDealData = {};
 
-        // Проверяем, открыта ли страница по персональной ссылке с параметром start (для покупателя)
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
-            // Либо через Telegram startapp параметры, либо через query string
             const startParam = tg.initDataUnsafe?.start_param || urlParams.get('start');
 
             if (startParam && startParam.includes('deal')) {
-                // Переключаем интерфейс в режим Покупателя
                 document.getElementById('sellerView').classList.add('hidden');
                 document.getElementById('buyerNavView').classList.remove('hidden');
                 document.getElementById('buyerDealIdView').textContent = '#' + startParam.replace('deal_', '');
             }
         };
 
-        // --- ЛОГИКА ПРОДАВЦА ---
         function createDeal() {
             const name = document.getElementById('giftName').value.trim();
-            const price = parseInt(document.getElementById('giftPrice').value);
-            if (!name || !price || price <= 0) {
-                tg.showAlert("Заполните корректно название и сумму!");
+            const price = document.getElementById('giftPrice').value.trim();
+            const bank = document.getElementById('payBank').value.trim();
+            const card = document.getElementById('payCard').value.trim();
+            const comment = document.getElementById('payComment').value.trim();
+
+            if (!name || !price || !bank || !card) {
+                tg.showAlert("Заполните название, сумму и реквизиты!");
                 return;
             }
 
-            document.getElementById('sellerGetAmount').textContent = price.toLocaleString() + ' ₽';
-            
-            // Генерируем персональную личную ссылку на сделку
-            const link = `https://t.me/GuarantMiniApp_bot?start=deal_${activeDealId}`;
+            currentDealData = { gift: name, price, payment_info: { bank, card, comment } };
+
+            // Отправляем данные боту для публикации в группу админов
+            tg.sendData(JSON.stringify({
+                action: "create_deal",
+                deal_id: dealId,
+                ...currentDealData
+            }));
+
+            const link = `https://t.me/GuarantMiniApp_bot?start=deal_${dealId}`;
             document.getElementById('personalDealLink').textContent = link;
 
             document.getElementById('sellerStep1').classList.add('hidden');
@@ -364,7 +200,6 @@
         }
 
         function sellerGoToDeposit() {
-            document.getElementById('targetGiftName').textContent = document.getElementById('giftName').value;
             document.getElementById('sellerStep2').classList.add('hidden');
             document.getElementById('sellerStep3').classList.remove('hidden');
         }
@@ -372,82 +207,23 @@
         function sellerDoneDeposit() {
             document.getElementById('sellerStep3').classList.add('hidden');
             document.getElementById('sellerStep4').classList.remove('hidden');
-
-            // Симулируем для покупателя, что продавец скинул подарок (в реальном боте это меняется по клику или через бэкенд)
-            // Здесь для теста можно обновить локально
-            localStorage.setItem(`deal_${activeDealId}_status`, 'deposited');
+            tg.showAlert("Запрос отправлен администраторам в группу для проверки активов!");
         }
 
-        function sellerConfirmedMoney() {
-            document.getElementById('sellerStep5').classList.add('hidden');
-            document.getElementById('sellerStep4').classList.remove('hidden');
-            document.getElementById('sellerStep4').innerHTML = `
-                <div class="card-title" style="color: var(--success);">🎉 Сделка завершена!</div>
-                <div class="instruction">Вы подтвердили получение средств. Бот передал подарок покупателю.</div>
-            `;
-        }
-
-        // --- ЛОГИКА ПОКУПАТЕЛЯ ---
         function buyerPaidAction() {
-            document.getElementById('buyerStatusReadyToPay').classList.add('hidden');
-            document.getElementById('buyerStatusCheck').classList.remove('hidden');
-            document.getElementById('buyerStatusBadge').textContent = "Проверка оплаты";
-
-            // Переключаем экран продавца на шаг подтверждения денег (для теста)
-            setTimeout(() => {
-                document.getElementById('sellerStep4').classList.add('hidden');
-                document.getElementById('sellerStep5').classList.remove('hidden');
-            }, 1500);
+            tg.showAlert("Вы отметили оплату. Ожидаем подтверждения от администратора.");
         }
 
-        // --- ПОДДЕРЖКА / УВЕДОМЛЕНИЯ В ГРУППУ ---
         function openSupport() {
-            // Отправка данных о споре в бот/группу
-            tg.sendData(JSON.stringify({
-                action: "support_dispute",
-                group_id: GROUP_ID,
-                deal_id: activeDealId
-            }));
-            
-            tg.showAlert(`Спор отправлен в группу поддержки (${GROUP_ID}). Администратор скоро подключится.`);
+            tg.sendData(JSON.stringify({ action: "support_dispute", deal_id: dealId }));
+            tg.showAlert("Спор отправлен в группу поддержки!");
         }
 
-        // --- НАДЕЖНОЕ КОПИРОВАНИЕ ---
         function copyText(text) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showCopiedPopup(text);
-                }).catch(() => fallbackCopy(text));
-            } else {
-                fallbackCopy(text);
-            }
-        }
-
-        function fallbackCopy(text) {
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            ta.style.position = 'fixed';
-            ta.style.opacity = '0';
-            document.body.appendChild(ta);
-            ta.focus();
-            ta.select();
-            try {
-                document.execCommand('copy');
-                showCopiedPopup(text);
-            } catch (e) {
-                tg.showAlert("Скопируйте вручную: " + text);
-            }
-            document.body.removeChild(ta);
-        }
-
-        function showCopiedPopup(text) {
-            if (tg.showPopup) {
-                tg.showPopup({
-                    title: "Скопировано! ✅",
-                    message: text,
-                    buttons: [{ type: "ok" }]
-                });
-            }
+            navigator.clipboard.writeText(text).then(() => {
+                if (tg.showPopup) tg.showPopup({ title: "Скопировано! ✅", message: text, buttons: [{type: "ok"}] });
+                else alert("Скопировано: " + text);
+            });
         }
     </script>
 </body>
