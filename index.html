@@ -72,15 +72,16 @@
         <div id="sellerStep3" class="card hidden">
             <div class="card-title">
                 <span>🎉 Сделка создана!</span>
-                <span class="badge warning" id="statusBadge">Проверка гарантом...</span>
+                <span class="badge warning" id="statusBadge">Ожидание оплаты</span>
             </div>
-            <div class="instruction" id="statusInstruction">Ожидаем, пока гарант подтвердит получение гифта в Telegram...</div>
+            <div class="instruction">Отправьте ссылку ниже покупателю для оплаты сделки:</div>
             
             <div class="action-box" onclick="copyBuyerLink()">
                 <div style="font-size: 11px; color: var(--text-muted);">Ссылка для покупателя:</div>
                 <div class="value" id="buyerLinkText">Создаем ссылку...</div>
             </div>
             <button type="button" class="btn btn-secondary" onclick="copyBuyerLink()">📋 Скопировать ссылку</button>
+            <button type="button" class="btn btn-secondary" style="margin-top:8px; background: #1f293d;" onclick="location.reload()">➕ Создать еще одну сделку</button>
         </div>
     </div>
 
@@ -108,15 +109,18 @@
 
         const BOT_TOKEN = "8987632200:AAG2bS9DJy9sGzuUdAZ-kiuZZB0jNXVeo3Y";
         const GROUP_ID = "-1003589174040";
-        const BACKEND_URL = "http://localhost:8080"; 
+        
         let currentDealId = null;
         let generatedBuyerLink = "";
-        let pollInterval = null;
+
+        // ПРИ КАЖДОМ ОТКРЫТИИ ВСЁ ОЧИЩАЕТСЯ
+        localStorage.clear();
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const payParam = urlParams.get('pay_data');
 
+            // ЕСЛИ ЭТО ПОКУПАТЕЛЬ (перешел по ссылке оплаты)
             if (payParam) {
                 document.getElementById('sellerView').classList.add('hidden');
                 document.getElementById('buyerView').classList.remove('hidden');
@@ -128,23 +132,12 @@
                     document.getElementById('rCard').textContent = data.card;
                     document.getElementById('rComment').textContent = 'Комментарий: ' + (data.comment || 'Нет');
                 } catch(e) { console.error(e); }
-            } else {
-                const savedStep = localStorage.getItem('seller_step');
-                currentDealId = localStorage.getItem('current_deal_id');
-
-                if (savedStep === '2') {
-                    document.getElementById('sellerStep1').classList.add('hidden');
-                    document.getElementById('sellerStep2').classList.remove('hidden');
-                } else if (savedStep === '3') {
-                    document.getElementById('sellerStep1').classList.add('hidden');
-                    document.getElementById('sellerStep3').classList.remove('hidden');
-                    generatedBuyerLink = localStorage.getItem('buyer_link') || '';
-                    document.getElementById('buyerLinkText').textContent = generatedBuyerLink;
-                    
-                    if (currentDealId) {
-                        startStatusPolling(currentDealId);
-                    }
-                }
+            } 
+            // ЕСЛИ ЭТО ПРОДАВЕЦ — ВСЕГДА 1 ШАГ
+            else {
+                document.getElementById('sellerStep1').classList.remove('hidden');
+                document.getElementById('sellerStep2').classList.add('hidden');
+                document.getElementById('sellerStep3').classList.add('hidden');
             }
         };
 
@@ -159,7 +152,6 @@
                 return;
             }
 
-            localStorage.setItem('seller_step', '2');
             document.getElementById('sellerStep1').classList.add('hidden');
             document.getElementById('sellerStep2').classList.remove('hidden');
         }
@@ -181,23 +173,14 @@
 
             generatedBuyerLink = `https://t.me/GuarantMiniApp_bot?start=deal_${currentDealId}`;
 
-            try {
-                await fetch(`${BACKEND_URL}/register_deal`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        deal_id: currentDealId, gift: gift, price: price,
-                        bank: bank, card: card, comment: comment, seller: username
-                    })
-                });
-            } catch (e) { console.log(e); }
-
-            const groupText = `📤 <b>ПРОДАВЕЦ ОТПРАВИЛ АКТИВЫ НА ПРОВЕРКУ!</b>\n\n` +
+            // Хранение данных сделки прямо в Telegram-уведомлении
+            const groupText = `📤 <b>ПРОДАВЕЦ СОЗДАЛ СДЕЛКУ!</b>\n\n` +
                               `🆔 <b>Сделка:</b> #${currentDealId}\n` +
                               `👤 <b>Продавец:</b> ${username}\n` +
                               `🎁 <b>Подарок:</b> ${gift}\n` +
-                              `💰 <b>Сумма:</b> ${price} ₽\n\n` +
-                              `👉 Подтвердите получение подарка:`;
+                              `💰 <b>Сумма:</b> ${price} ₽\n` +
+                              `🏦 <b>Реквизиты:</b> ${bank} | <code>${card}</code>\n` +
+                              `💬 <b>Коммент:</b> ${comment || '—'}`;
 
             try {
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -206,22 +189,13 @@
                     body: JSON.stringify({
                         chat_id: GROUP_ID,
                         text: groupText,
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [[{ text: "✅ Подтвердить получение активов", callback_data: `admin_confirm_${currentDealId}` }]]
-                        }
+                        parse_mode: 'HTML'
                     })
                 });
-
-                localStorage.setItem('seller_step', '3');
-                localStorage.setItem('current_deal_id', currentDealId);
-                localStorage.setItem('buyer_link', generatedBuyerLink);
 
                 document.getElementById('sellerStep2').classList.add('hidden');
                 document.getElementById('sellerStep3').classList.remove('hidden');
                 document.getElementById('buyerLinkText').textContent = generatedBuyerLink;
-
-                startStatusPolling(currentDealId);
 
             } catch (err) {
                 alert("Ошибка: " + err);
@@ -230,36 +204,20 @@
             }
         }
 
-        function startStatusPolling(dealId) {
-            if (pollInterval) clearInterval(pollInterval);
-            
-            pollInterval = setInterval(async () => {
-                try {
-                    const res = await fetch(`${BACKEND_URL}/check_status?deal_id=${dealId}`);
-                    const data = await res.json();
-                    
-                    if (data.status === 'confirmed') {
-                        const badge = document.getElementById('statusBadge');
-                        badge.className = 'badge success';
-                        badge.textContent = 'Активы у гаранта!';
-                        
-                        document.getElementById('statusInstruction').innerHTML = '✅ <b>Гарант подтвердил получение подарка!</b> Передайте ссылку покупателю для оплаты:';
-                        clearInterval(pollInterval);
-                    }
-                } catch(e) { console.log(e); }
-            }, 2000);
-        }
-
         async function callSupport() {
             const user = tg.initDataUnsafe?.user;
             const username = user ? (user.username ? '@' + user.username : user.first_name) : 'Неизвестно';
             const userId = user ? user.id : '0';
 
             try {
-                await fetch(`${BACKEND_URL}/support_request`, {
+                await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: username, user_id: userId })
+                    body: JSON.stringify({
+                        chat_id: GROUP_ID,
+                        text: `🚨 <b>ВНИМАНИЕ! КЛИЕНТ ВЫЗВАЛ ПОДДЕРЖКУ!</b>\n👤 Имя: ${username}\n🆔 ID: <code>${userId}</code>`,
+                        parse_mode: 'HTML'
+                    })
                 });
                 alert("Запрос отправлен в группу поддержки!");
             } catch (e) {
