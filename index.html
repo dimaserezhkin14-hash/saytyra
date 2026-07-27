@@ -151,7 +151,6 @@
             document.getElementById('sellerStep2').classList.remove('hidden');
         }
 
-        // Кодирование информации в Base64 для безопасной передачи в start-ссылке
         function base64EncodeUnicode(str) {
             return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
                 return String.fromCharCode('0x' + p1);
@@ -173,19 +172,14 @@
             const user = tg.initDataUnsafe?.user;
             const username = user ? (user.username ? '@' + user.username : user.first_name) : 'Продавец';
 
-            // Упаковываем все данные прямо в ссылку
             const payload = JSON.stringify({
-                id: dealId,
-                gift: gift,
-                price: price,
-                bank: bank,
-                card: card,
-                comment: comment
+                id: dealId, gift: gift, price: price, bank: bank, card: card, comment: comment
             });
 
             const encodedPayload = base64EncodeUnicode(payload);
             generatedBuyerLink = `https://t.me/GuarantMiniApp_bot?start=${encodedPayload}`;
 
+            // СООБЩЕНИЕ В ГРУППУ С КНОПКОЙ
             const groupText = `📤 <b>ПРОДАВЕЦ СОЗДАЛ СДЕЛКУ!</b>\n\n` +
                               `🆔 <b>Сделка:</b> #${dealId}\n` +
                               `👤 <b>Продавец:</b> ${username}\n` +
@@ -201,7 +195,12 @@
                     body: JSON.stringify({
                         chat_id: GROUP_ID,
                         text: groupText,
-                        parse_mode: 'HTML'
+                        parse_mode: 'HTML',
+                        reply_markup: {
+                            inline_keyboard: [[
+                                { text: "✅ Подтвердить получение активов", callback_data: `confirm_${dealId}` }
+                            ]]
+                        }
                     })
                 });
 
