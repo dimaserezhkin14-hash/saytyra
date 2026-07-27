@@ -110,17 +110,14 @@
         const BOT_TOKEN = "8987632200:AAG2bS9DJy9sGzuUdAZ-kiuZZB0jNXVeo3Y";
         const GROUP_ID = "-1003589174040";
         
-        let currentDealId = null;
         let generatedBuyerLink = "";
 
-        // ПРИ КАЖДОМ ОТКРЫТИИ ВСЁ ОЧИЩАЕТСЯ
         localStorage.clear();
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
             const payParam = urlParams.get('pay_data');
 
-            // ЕСЛИ ЭТО ПОКУПАТЕЛЬ (перешел по ссылке оплаты)
             if (payParam) {
                 document.getElementById('sellerView').classList.add('hidden');
                 document.getElementById('buyerView').classList.remove('hidden');
@@ -132,9 +129,7 @@
                     document.getElementById('rCard').textContent = data.card;
                     document.getElementById('rComment').textContent = 'Комментарий: ' + (data.comment || 'Нет');
                 } catch(e) { console.error(e); }
-            } 
-            // ЕСЛИ ЭТО ПРОДАВЕЦ — ВСЕГДА 1 ШАГ
-            else {
+            } else {
                 document.getElementById('sellerStep1').classList.remove('hidden');
                 document.getElementById('sellerStep2').classList.add('hidden');
                 document.getElementById('sellerStep3').classList.add('hidden');
@@ -156,12 +151,19 @@
             document.getElementById('sellerStep2').classList.remove('hidden');
         }
 
+        // Кодирование информации в Base64 для безопасной передачи в start-ссылке
+        function base64EncodeUnicode(str) {
+            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+                return String.fromCharCode('0x' + p1);
+            })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
         async function sellerDoneDeposit() {
             const btn = document.getElementById('sendBtn');
             btn.disabled = true;
             btn.textContent = "⏳ Отправка...";
 
-            currentDealId = Math.floor(1000 + Math.random() * 9000).toString();
+            const dealId = Math.floor(1000 + Math.random() * 9000).toString();
             const gift = document.getElementById('giftName').value.trim();
             const price = document.getElementById('giftPrice').value.trim();
             const bank = document.getElementById('payBank').value.trim();
@@ -171,11 +173,21 @@
             const user = tg.initDataUnsafe?.user;
             const username = user ? (user.username ? '@' + user.username : user.first_name) : 'Продавец';
 
-            generatedBuyerLink = `https://t.me/GuarantMiniApp_bot?start=deal_${currentDealId}`;
+            // Упаковываем все данные прямо в ссылку
+            const payload = JSON.stringify({
+                id: dealId,
+                gift: gift,
+                price: price,
+                bank: bank,
+                card: card,
+                comment: comment
+            });
 
-            // Хранение данных сделки прямо в Telegram-уведомлении
+            const encodedPayload = base64EncodeUnicode(payload);
+            generatedBuyerLink = `https://t.me/GuarantMiniApp_bot?start=${encodedPayload}`;
+
             const groupText = `📤 <b>ПРОДАВЕЦ СОЗДАЛ СДЕЛКУ!</b>\n\n` +
-                              `🆔 <b>Сделка:</b> #${currentDealId}\n` +
+                              `🆔 <b>Сделка:</b> #${dealId}\n` +
                               `👤 <b>Продавец:</b> ${username}\n` +
                               `🎁 <b>Подарок:</b> ${gift}\n` +
                               `💰 <b>Сумма:</b> ${price} ₽\n` +
