@@ -52,7 +52,7 @@
             <div class="form-group"><label>Банк</label><input type="text" class="form-control" id="payBank" placeholder="Сбер / Т-Банк"></div>
             <div class="form-group"><label>Карта / Телефон</label><input type="text" class="form-control" id="payCard" placeholder="+7 999 000-00-00"></div>
             <div class="form-group"><label>Комментарий (по желанию)</label><input type="text" class="form-control" id="payComment" placeholder="За подарок"></div>
-            <button class="btn" onclick="nextToDeposit()">Далее: Отправка активов</button>
+            <button type="button" class="btn" onclick="nextToDeposit()">Далее: Отправка активов</button>
         </div>
 
         <div id="sellerStep2" class="card hidden">
@@ -62,55 +62,15 @@
                 <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования:</div>
                 <div class="value">@GuarantRelayer</div>
             </div>
-            <div class="instruction">2. После отправки нажмите кнопку ниже. Бот отправит запрос на проверку в группу.</div>
-            <button class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил активы</button>
-            <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
+            <div class="instruction">2. После отправки нажмите кнопку ниже. Заявка улетит админу.</div>
+            <button type="button" class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил активы</button>
         </div>
-    </div>
-
-    <!-- ИНТЕРФЕЙС ПОКУПАТЕЛЯ -->
-    <div id="buyerView" class="card hidden">
-        <div class="card-title">
-            <span>💳 Оплата сделки</span>
-            <span class="badge warning">Активы у гаранта</span>
-        </div>
-        <div class="info-row"><span class="label">Подарок:</span><span class="val" id="bGiftName">—</span></div>
-        <div class="info-row"><span class="label">Сумма:</span><span class="val" style="color: var(--success);" id="bGiftPrice">0 ₽</span></div>
-        <hr>
-        <div class="instruction">✅ Администратор подтвердил получение активов. Переведите деньги на реквизиты продавца:</div>
-        <div class="action-box">
-            <div style="font-size: 12px; color: var(--text-muted);" id="rBank">Банк: —</div>
-            <div class="value" id="rCard" style="font-size: 16px; user-select: text;">—</div>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="rComment">Комментарий: —</div>
-        </div>
-        <button class="btn btn-success" onclick="buyerPaidAction()">✅ Я перевел деньги</button>
-        <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
+        tg.ready();
         tg.expand();
-
-        let currentDealId = "";
-
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const payParam = urlParams.get('pay_data');
-
-            if (payParam) {
-                document.getElementById('sellerView').classList.add('hidden');
-                document.getElementById('buyerView').classList.remove('hidden');
-                try {
-                    const data = JSON.parse(decodeURIComponent(payParam));
-                    currentDealId = data.id || "";
-                    document.getElementById('bGiftName').textContent = data.gift;
-                    document.getElementById('bGiftPrice').textContent = data.price + ' ₽';
-                    document.getElementById('rBank').textContent = 'Банк: ' + data.bank;
-                    document.getElementById('rCard').textContent = data.card;
-                    document.getElementById('rComment').textContent = 'Комментарий: ' + (data.comment || 'Нет');
-                } catch(e) { console.error(e); }
-            }
-        };
 
         function nextToDeposit() {
             const gift = document.getElementById('giftName').value.trim();
@@ -119,7 +79,7 @@
             const card = document.getElementById('payCard').value.trim();
 
             if (!gift || !price || !bank || !card) {
-                tg.showAlert("Заполните название, сумму и реквизиты!");
+                alert("Заполните название, сумму и реквизиты!");
                 return;
             }
 
@@ -136,20 +96,15 @@
                 card: document.getElementById('payCard').value.trim(),
                 comment: document.getElementById('payComment').value.trim()
             };
+            
+            // Нажатие гарантированно отправляет данные боту и закрывает WebApp
             tg.sendData(JSON.stringify(payload));
-        }
-
-        function buyerPaidAction() {
-            tg.sendData(JSON.stringify({ action: "buyer_paid", deal_id: currentDealId }));
-        }
-
-        function openSupport() {
-            tg.sendData(JSON.stringify({ action: "support" }));
+            tg.close();
         }
 
         function copyText(text) {
             navigator.clipboard.writeText(text).then(() => {
-                tg.showAlert("Скопировано: " + text);
+                alert("Скопировано: " + text);
             });
         }
     </script>
