@@ -11,19 +11,18 @@
             --card-bg: #181920;
             --card-border: #262832;
             --accent-color: #0088cc;
-            --accent-hover: #0077b5;
             --text-main: #ffffff;
             --text-muted: #8e92a2;
             --success: #2ed573;
             --warning: #ffa502;
+            --danger: #ff4757;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            font-family: system-ui, -apple-system, sans-serif;
         }
 
         body {
@@ -32,82 +31,9 @@
             padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
             min-height: 100vh;
         }
-
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 12px 16px;
-            border-radius: 16px;
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #2AABEE, #229ED9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        .user-details .name { font-size: 14px; font-weight: 600; }
-        .user-details .role { font-size: 12px; color: var(--text-muted); }
-
-        .badge {
-            background: rgba(46, 213, 115, 0.15);
-            color: var(--success);
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .tabs {
-            display: flex;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 4px;
-            border-radius: 12px;
-            gap: 4px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 10px;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 13px;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-
-        .tab-btn.active {
-            background: var(--card-border);
-            color: var(--text-main);
-        }
-
-        .tab-content {
-            display: none;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .tab-content.active { display: flex; }
 
         .card {
             background: var(--card-bg);
@@ -116,14 +42,37 @@
             padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 12px;
         }
 
         .card-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
+            text-align: center;
+        }
+
+        .step-indicator {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .step-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--card-border);
+            transition: 0.3s;
+        }
+
+        .step-dot.active {
+            background: var(--accent-color);
+            box-shadow: 0 0 8px var(--accent-color);
+        }
+
+        .step-dot.done {
+            background: var(--success);
         }
 
         .form-group {
@@ -135,203 +84,424 @@
         .form-group label {
             font-size: 12px;
             color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .form-control {
             background: #111218;
             border: 1px solid var(--card-border);
             border-radius: 10px;
-            padding: 12px;
-            color: var(--text-main);
-            font-size: 14px;
+            padding: 14px 12px;
+            color: #fff;
+            font-size: 15px;
             outline: none;
+            transition: border 0.3s;
         }
 
-        .fee-notice {
-            background: rgba(255, 165, 0, 0.08);
-            border: 1px solid rgba(255, 165, 0, 0.2);
-            border-radius: 10px;
-            padding: 10px 12px;
-            font-size: 12px;
-            color: var(--warning);
-            line-height: 1.4;
+        .form-control:focus {
+            border-color: var(--accent-color);
+        }
+
+        .highlight-box {
+            background: rgba(0, 136, 204, 0.1);
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 700;
+            word-break: break-all;
+            user-select: all;
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+            color: var(--accent-color);
+            letter-spacing: 0.5px;
+        }
+
+        .highlight-box:active {
+            background: rgba(0, 136, 204, 0.25);
+            transform: scale(0.97);
+        }
+
+        .copy-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: -8px;
+        }
+
+        .instruction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .instruction-list .num {
+            color: var(--accent-color);
+            font-weight: 700;
+            margin-right: 6px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            background: var(--accent-color);
+            color: #fff;
+            transition: 0.2s;
+            text-align: center;
+        }
+
+        .btn:active {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+
+        .btn.success {
+            background: var(--success);
+        }
+
+        .btn.danger {
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
         }
 
         .info-row {
             display: flex;
             justify-content: space-between;
-            font-size: 13px;
+            font-size: 14px;
+            padding: 4px 0;
         }
 
-        .info-row .label { color: var(--text-muted); }
-        .info-row .val { font-weight: 600; }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            background: var(--accent-color);
-            color: #fff;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--card-border);
+        .info-row .label {
             color: var(--text-muted);
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid var(--card-border);
+            margin: 4px 0;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge.pending {
+            background: rgba(255, 165, 0, 0.15);
+            color: var(--warning);
+        }
+
+        .badge.done {
+            background: rgba(46, 213, 115, 0.15);
+            color: var(--success);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .alert-box {
+            background: rgba(255, 165, 0, 0.08);
+            border: 1px solid rgba(255, 165, 0, 0.25);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 12px;
+            color: var(--warning);
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="user-info">
-            <div class="avatar" id="userAvatar">U</div>
-            <div class="user-details">
-                <div class="name" id="userName">Пользователь</div>
-                <div class="role">Гарант NFT Подарков</div>
-            </div>
+    <!-- ШАГ 1: Создание сделки (Продавец) -->
+    <div id="step1" class="card">
+        <div class="step-indicator">
+            <span class="step-dot active"></span>
+            <span class="step-dot"></span>
+            <span class="step-dot"></span>
+            <span class="step-dot"></span>
         </div>
-        <div class="badge">Сервис активен</div>
+        <div class="card-title">📦 Новая сделка</div>
+
+        <div class="form-group">
+            <label>Название подарка</label>
+            <input type="text" class="form-control" id="giftName" placeholder="Например: Владосик Мишка">
+        </div>
+
+        <div class="form-group">
+            <label>Сумма сделки (₽)</label>
+            <input type="number" class="form-control" id="priceInput" placeholder="1500" oninput="updateSummary()">
+        </div>
+
+        <div class="info-row">
+            <span class="label">Стоимость подарка:</span>
+            <span id="giftPriceDisplay">0 ₽</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Комиссия за передачу:</span>
+            <span>2 мишки (≈ 250 ₽)</span>
+        </div>
+        <hr>
+        <div class="info-row">
+            <span class="label">Покупатель платит продавцу:</span>
+            <span id="totalDisplay" style="color: var(--success); font-weight: 700;">0 ₽</span>
+        </div>
+
+        <button class="btn" onclick="createDeal()">Создать сделку</button>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('create-deal')">Создать сделку</button>
-        <button class="tab-btn" onclick="switchTab('my-deals')">Мои сделки</button>
+    <!-- ШАГ 2: Продавец кидает подарок + 2 мишки на @GuarantRelayer -->
+    <div id="step2" class="card hidden">
+        <div class="step-indicator">
+            <span class="step-dot done"></span>
+            <span class="step-dot active"></span>
+            <span class="step-dot"></span>
+            <span class="step-dot"></span>
+        </div>
+        <div class="card-title">📤 Продавец: отправь подарок</div>
+
+        <div class="instruction-list">
+            <div><span class="num">1.</span> Отправь подарок <strong id="giftNameDisplay2">—</strong> на аккаунт:</div>
+        </div>
+
+        <!-- НЕЙТРАЛЬНЫЙ КОШЕЛЁК (КОПИРУЕТСЯ) -->
+        <div class="highlight-box" id="neutralWalletLink" onclick="copyToClipboard('@GuarantRelayer')">
+            @GuarantRelayer
+        </div>
+        <div class="copy-hint">👆 Нажми, чтобы скопировать @GuarantRelayer</div>
+
+        <div class="instruction-list">
+            <div><span class="num">2.</span> Туда же отправь <strong>2 мишки</strong> — это комиссия за передачу подарка покупателю.</div>
+        </div>
+
+        <div class="alert-box">
+            ⚠️ Без 2 мишек бот не сможет передать подарок покупателю!
+        </div>
+
+        <button class="btn success" onclick="sellerSentGift()">✅ Я отправил подарок и 2 мишки</button>
+        <button class="btn danger" onclick="openSupport()">🆘 Нужна помощь</button>
     </div>
 
-    <!-- Вкладка 1: Создание сделки -->
-    <div id="create-deal" class="tab-content active">
-        <div class="card">
-            <div class="card-title">Регистрация сделки (NFT Подарок)</div>
+    <!-- ШАГ 3: Покупатель платит продавцу -->
+    <div id="step3" class="card hidden">
+        <div class="step-indicator">
+            <span class="step-dot done"></span>
+            <span class="step-dot done"></span>
+            <span class="step-dot active"></span>
+            <span class="step-dot"></span>
+        </div>
+        <div class="card-title">💳 Покупатель: оплати сделку</div>
 
-            <div class="form-group">
-                <label>Название / Описание NFT подарка</label>
-                <input type="text" class="form-control" id="giftName" placeholder="Например: Владосик Мишка">
-            </div>
+        <div class="instruction-list">
+            <div><span class="num">1.</span> Переведи <strong id="totalDisplay3">0 ₽</strong> продавцу по реквизитам:</div>
+        </div>
 
-            <div class="form-group">
-                <label>Сумма сделки (в рублях, ₽)</label>
-                <input type="number" class="form-control" id="priceInput" placeholder="Например: 1500" oninput="calcTotal()">
-            </div>
+        <!-- РЕКВИЗИТЫ ПРОДАВЦА (КОПИРУЮТСЯ) -->
+        <div class="highlight-box" id="sellerRequisites" onclick="copyToClipboard(this.innerText)">
+            +7 (999) 123-45-67
+        </div>
+        <div class="copy-hint">👆 Нажми, чтобы скопировать номер</div>
 
-            <!-- Блок с пояснением про комиссию -->
-            <div class="fee-notice">
-                ℹ️ <b>Обратите внимание:</b> Комиссия сервиса фиксированная и требуется <u>исключительно для покрытия технической передачи подарка покупателю</u>.
-            </div>
+        <div class="instruction-list">
+            <div><span class="num">2.</span> После перевода нажми кнопку ниже.</div>
+        </div>
 
-            <div class="info-row">
-                <span class="label">Стоимость подарка:</span>
-                <span class="val" id="giftPriceDisplay">0 ₽</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Тех. комиссия передачи:</span>
-                <span class="val">250 ₽</span>
-            </div>
+        <button class="btn success" onclick="buyerPaid()">✅ Я оплатил</button>
+        <button class="btn danger" onclick="openSupport()">🆘 Нужна помощь</button>
+    </div>
 
-            <hr style="border: 0; border-top: 1px solid var(--card-border);">
+    <!-- ШАГ 4: Продавец проверяет поступление денег -->
+    <div id="step4" class="card hidden">
+        <div class="step-indicator">
+            <span class="step-dot done"></span>
+            <span class="step-dot done"></span>
+            <span class="step-dot done"></span>
+            <span class="step-dot active"></span>
+        </div>
+        <div class="card-title">✅ Проверка оплаты</div>
 
-            <div class="info-row">
-                <span class="label">Итого к оплате покупателем:</span>
-                <span class="val" id="totalDisplay" style="color: var(--success); font-weight: 700;">0 ₽</span>
-            </div>
+        <div class="instruction-list">
+            <div><span class="num">1.</span> Проверь поступление <strong id="totalDisplay4">0 ₽</strong> на твой счёт.</div>
+            <div><span class="num">2.</span> Если деньги пришли — нажми <strong>«Деньги получил»</strong>.</div>
+            <div><span class="num">3.</span> Бот передаст подарок покупателю в течение нескольких минут.</div>
+        </div>
 
-            <button class="btn" onclick="registerDeal()">Зарегистрировать сделку</button>
+        <div class="alert-box">
+            Если денег нет — нажми <strong>«Денег нет»</strong>. Заявка уйдёт в группу, и я лично разберусь.
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button class="btn success" style="flex:1;" onclick="confirmPayment()">💰 Деньги получил</button>
+            <button class="btn danger" style="flex:1;" onclick="openSupport()">🆘 Денег нет</button>
         </div>
     </div>
 
-    <!-- Вкладка 2: Список сделок -->
-    <div id="my-deals" class="tab-content">
-        <div id="dealsList" style="display: flex; flex-direction: column; gap: 12px;">
-            <!-- Сделки будут появляться тут -->
+    <!-- ФИНАЛ: Сделка завершена -->
+    <div id="stepFinal" class="card hidden">
+        <div class="step-indicator">
+            <span class="step-dot done"></span>
+            <span class="step-dot done"></span>
+            <span class="step-dot done"></span>
+            <span class="step-dot done"></span>
         </div>
+        <div class="card-title" style="color: var(--success);">🎉 Сделка завершена!</div>
+        <p style="text-align: center; color: var(--text-muted); font-size: 14px; line-height: 1.6;">
+            Бот передаёт подарок покупателю.<br>
+            Это займёт несколько минут.<br><br>
+            Спасибо за использование сервиса!
+        </p>
+        <button class="btn" onclick="tg.close()">Закрыть</button>
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const user = tg.initDataUnsafe?.user;
-        if (user) {
-            document.getElementById('userName').textContent = user.first_name || 'Пользователь';
-            document.getElementById('userAvatar').textContent = (user.first_name || 'U')[0].toUpperCase();
-        }
+        // ========== НАСТРОЙКИ (ЗАМЕНИ ТОЛЬКО ЭТО) ==========
+        const NEUTRAL_WALLET = "@GuarantRelayer";        // Нейтральный кошелёк
+        const SUPPORT_LINK = "https://t.me/+ваша_ссылка"; // Ссылка на группу для споров
+        const SELLER_REQUISITES = "+7 (999) 123-45-67";   // Реквизиты продавца
+        // ====================================================
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        let currentDeal = null;
 
-            event.target.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-            
-            if (tabId === 'my-deals') renderDeals();
-        }
-
-        function calcTotal() {
+        function updateSummary() {
             const price = parseInt(document.getElementById('priceInput').value) || 0;
-            document.getElementById('giftPriceDisplay').textContent = `${price} ₽`;
-            const total = price > 0 ? price + 250 : 0;
-            document.getElementById('totalDisplay').textContent = `${total} ₽`;
+            document.getElementById('giftPriceDisplay').textContent = price.toLocaleString() + ' ₽';
+            document.getElementById('totalDisplay').textContent = price > 0 ? price.toLocaleString() + ' ₽' : '0 ₽';
         }
 
-        function registerDeal() {
+        // Шаг 1 → Шаг 2
+        function createDeal() {
             const name = document.getElementById('giftName').value.trim();
             const price = parseInt(document.getElementById('priceInput').value);
 
-            if (!name) {
-                tg.showAlert("Укажите название NFT подарка!");
-                return;
-            }
-            if (!price || price <= 0) {
-                tg.showAlert("Укажите корректную сумму сделки в рублях!");
+            if (!name || !price || price <= 0) {
+                tg.showAlert("Заполни все поля корректно!");
                 return;
             }
 
-            const deal = {
+            currentDeal = {
                 id: Math.floor(100000 + Math.random() * 900000),
                 name: name,
                 price: price,
-                total: price + 250,
-                date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                status: 'Ожидает заморозки подарка'
+                commission: "2 мишки",
+                neutralWallet: NEUTRAL_WALLET
             };
 
-            let deals = JSON.parse(localStorage.getItem('user_deals') || '[]');
-            deals.unshift(deal);
-            localStorage.setItem('user_deals', JSON.stringify(deals));
+            document.getElementById('giftNameDisplay2').textContent = name;
+            document.getElementById('totalDisplay3').textContent = price.toLocaleString() + ' ₽';
+            document.getElementById('totalDisplay4').textContent = price.toLocaleString() + ' ₽';
+            document.getElementById('neutralWalletLink').textContent = NEUTRAL_WALLET;
+            document.getElementById('sellerRequisites').textContent = SELLER_REQUISITES;
 
-            tg.showAlert(`Сделка #${deal.id} успешно создана!`);
-            document.getElementById('giftName').value = '';
-            document.getElementById('priceInput').value = '';
-            calcTotal();
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
 
-            switchTab('my-deals');
+            tg.sendData(JSON.stringify({
+                action: "deal_created",
+                deal: currentDeal
+            }));
+
+            window.scrollTo(0, 0);
         }
 
-        function renderDeals() {
-            const list = document.getElementById('dealsList');
-            let deals = JSON.parse(localStorage.getItem('user_deals') || '[]');
+        // Шаг 2 → Шаг 3
+        function sellerSentGift() {
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
 
-            if (deals.length === 0) {
-                list.innerHTML = `<div class="card" style="text-align: center; color: var(--text-muted);">Активных сделок пока нет</div>`;
-                return;
+            tg.sendData(JSON.stringify({
+                action: "gift_and_2mishki_sent_to_GuarantRelayer",
+                deal: currentDeal
+            }));
+
+            window.scrollTo(0, 0);
+        }
+
+        // Шаг 3 → Шаг 4
+        function buyerPaid() {
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step4').classList.remove('hidden');
+
+            tg.sendData(JSON.stringify({
+                action: "buyer_paid",
+                deal: currentDeal
+            }));
+
+            window.scrollTo(0, 0);
+        }
+
+        // Шаг 4 → Финал
+        function confirmPayment() {
+            document.getElementById('step4').classList.add('hidden');
+            document.getElementById('stepFinal').classList.remove('hidden');
+
+            tg.sendData(JSON.stringify({
+                action: "seller_confirmed_payment__bot_will_transfer_gift",
+                deal: currentDeal
+            }));
+
+            window.scrollTo(0, 0);
+        }
+
+        // Поддержка — кидает в группу
+        function openSupport() {
+            tg.openLink(SUPPORT_LINK);
+        }
+
+        // Копирование в буфер
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    tg.showPopup({
+                        title: "Скопировано! ✅",
+                        message: text,
+                        buttons: [{ type: "ok" }]
+                    });
+                }).catch(() => {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
             }
+        }
 
-            list.innerHTML = deals.map(d => `
-                <div class="card">
-                    <div class="card-title">
-                        <span>Сделка #${d.id}</span>
-                        <span style="color: var(--warning); font-size: 12px;">${d.status}</span>
-                    </div>
-                    <div class="info-row"><span class="label">Подарок:</span><span class="val">${d.name}</span></div>
-                    <div class="info-row"><span class="label">Сумма продавца:</span><span class="val">${d.price} ₽</span></div>
-                    <div class="info-row"><span class="label">Итого с технической комиссией:</span><span class="val">${d.total} ₽</span></div>
-                    <button class="btn btn-outline" style="margin-top: 6px;" onclick="tg.showAlert('Ссылка на сделку #${d.id} скопирована')">Скопировать ссылку для покупателя</button>
-                </div>
-            `).join('');
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            ta.style.top = '-9999px';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try {
+                document.execCommand('copy');
+                tg.showPopup({
+                    title: "Скопировано! ✅",
+                    message: text,
+                    buttons: [{ type: "ok" }]
+                });
+            } catch (e) {
+                tg.showAlert("Не удалось скопировать. Скопируй вручную: " + text);
+            }
+            document.body.removeChild(ta);
         }
     </script>
 </body>
