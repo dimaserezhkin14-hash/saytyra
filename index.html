@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Escrow Service</title>
+    <title>NFT Gifts Escrow</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -16,7 +16,6 @@
             --text-muted: #8e92a2;
             --success: #2ed573;
             --warning: #ffa502;
-            --danger: #ff4757;
         }
 
         * {
@@ -37,7 +36,6 @@
             min-height: 100vh;
         }
 
-        /* Шапка */
         .header {
             display: flex;
             align-items: center;
@@ -63,18 +61,10 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 16px;
         }
 
-        .user-details .name {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .user-details .role {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
+        .user-details .name { font-size: 14px; font-weight: 600; }
+        .user-details .role { font-size: 12px; color: var(--text-muted); }
 
         .badge {
             background: rgba(46, 213, 115, 0.15);
@@ -85,7 +75,6 @@
             font-weight: 600;
         }
 
-        /* Табы (Навигация) */
         .tabs {
             display: flex;
             background: var(--card-bg);
@@ -105,7 +94,6 @@
             font-size: 13px;
             border-radius: 8px;
             cursor: pointer;
-            transition: 0.2s;
         }
 
         .tab-btn.active {
@@ -113,18 +101,14 @@
             color: var(--text-main);
         }
 
-        /* Контейнеры вкладок */
         .tab-content {
             display: none;
             flex-direction: column;
             gap: 16px;
         }
 
-        .tab-content.active {
-            display: flex;
-        }
+        .tab-content.active { display: flex; }
 
-        /* Карточка сделки */
         .card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
@@ -140,10 +124,8 @@
             font-weight: 700;
             display: flex;
             justify-content: space-between;
-            align-items: center;
         }
 
-        /* Формы ввода */
         .form-group {
             display: flex;
             flex-direction: column;
@@ -153,7 +135,6 @@
         .form-group label {
             font-size: 12px;
             color: var(--text-muted);
-            font-weight: 500;
         }
 
         .form-control {
@@ -166,95 +147,16 @@
             outline: none;
         }
 
-        .form-control:focus {
-            border-color: var(--accent-color);
-        }
-
-        /* Статус-трекер */
-        .timeline {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin: 8px 0;
-            position: relative;
-        }
-
-        .step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 13px;
-        }
-
-        .step-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: var(--card-border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .fee-notice {
+            background: rgba(255, 165, 0, 0.08);
+            border: 1px solid rgba(255, 165, 0, 0.2);
+            border-radius: 10px;
+            padding: 10px 12px;
             font-size: 12px;
-            color: var(--text-muted);
-            flex-shrink: 0;
+            color: var(--warning);
+            line-height: 1.4;
         }
 
-        .step.completed .step-icon {
-            background: var(--success);
-            color: #000;
-        }
-
-        .step.active .step-icon {
-            background: var(--warning);
-            color: #000;
-        }
-
-        .step-text .title {
-            font-weight: 600;
-        }
-
-        .step-text .sub {
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        /* Кнопки */
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .btn-primary {
-            background: var(--accent-color);
-            color: #fff;
-        }
-
-        .btn-primary:active {
-            background: var(--accent-hover);
-        }
-
-        .btn-secondary {
-            background: var(--card-border);
-            color: var(--text-main);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--card-border);
-            color: var(--text-muted);
-        }
-
-        /* Инфо-блок */
         .info-row {
             display: flex;
             justify-content: space-between;
@@ -263,118 +165,88 @@
 
         .info-row .label { color: var(--text-muted); }
         .info-row .val { font-weight: 600; }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--accent-color);
+            color: #fff;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
 
-    <!-- Шапка -->
     <div class="header">
         <div class="user-info">
             <div class="avatar" id="userAvatar">U</div>
             <div class="user-details">
                 <div class="name" id="userName">Пользователь</div>
-                <div class="role">Участник сделки</div>
+                <div class="role">Гарант NFT Подарков</div>
             </div>
         </div>
-        <div class="badge">Гарант активен</div>
+        <div class="badge">Сервис активен</div>
     </div>
 
-    <!-- Вкладки -->
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('active-deal')">Текущая сделка</button>
-        <button class="tab-btn" onclick="switchTab('create-deal')">Новая сделка</button>
+        <button class="tab-btn active" onclick="switchTab('create-deal')">Создать сделку</button>
+        <button class="tab-btn" onclick="switchTab('my-deals')">Мои сделки</button>
     </div>
 
-    <!-- Вкладка 1: Текущая сделка -->
-    <div id="active-deal" class="tab-content active">
+    <!-- Вкладка 1: Создание сделки -->
+    <div id="create-deal" class="tab-content active">
         <div class="card">
-            <div class="card-title">
-                <span>Сделка #1084</span>
-                <span style="color: var(--warning); font-size: 13px;">В процессе</span>
+            <div class="card-title">Регистрация сделки (NFT Подарок)</div>
+
+            <div class="form-group">
+                <label>Название / Описание NFT подарка</label>
+                <input type="text" class="form-control" id="giftName" placeholder="Например: Владосик Мишка">
+            </div>
+
+            <div class="form-group">
+                <label>Сумма сделки (в рублях, ₽)</label>
+                <input type="number" class="form-control" id="priceInput" placeholder="Например: 1500" oninput="calcTotal()">
+            </div>
+
+            <!-- Блок с пояснением про комиссию -->
+            <div class="fee-notice">
+                ℹ️ <b>Обратите внимание:</b> Комиссия сервиса фиксированная и требуется <u>исключительно для покрытия технической передачи подарка покупателю</u>.
             </div>
 
             <div class="info-row">
-                <span class="label">Предмет сделки:</span>
-                <span class="val">Telegram Gift (NFT)</span>
+                <span class="label">Стоимость подарка:</span>
+                <span class="val" id="giftPriceDisplay">0 ₽</span>
             </div>
             <div class="info-row">
-                <span class="label">Сумма:</span>
-                <span class="val">500 Stars</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Комиссия сервиса:</span>
-                <span class="val">25 Stars</span>
+                <span class="label">Тех. комиссия передачи:</span>
+                <span class="val">250 ₽</span>
             </div>
 
             <hr style="border: 0; border-top: 1px solid var(--card-border);">
 
-            <!-- Этапы сделки -->
-            <div class="timeline">
-                <div class="step completed">
-                    <div class="step-icon">✓</div>
-                    <div class="step-text">
-                        <div class="title">Сделка создана</div>
-                        <div class="sub">Условия согласованы обеими сторонами</div>
-                    </div>
-                </div>
-                <div class="step active">
-                    <div class="step-icon">⏳</div>
-                    <div class="step-text">
-                        <div class="title">Ожидание депонирования</div>
-                        <div class="sub">Продавец передает предмет на сервис хранения</div>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-icon">3</div>
-                    <div class="step-text">
-                        <div class="title">Оплата покупателем</div>
-                        <div class="sub">Заморозка средств на гарант-счете</div>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-icon">4</div>
-                    <div class="step-text">
-                        <div class="title">Завершение</div>
-                        <div class="sub">Автоматический обмен предмета и оплаты</div>
-                    </div>
-                </div>
+            <div class="info-row">
+                <span class="label">Итого к оплате покупателем:</span>
+                <span class="val" id="totalDisplay" style="color: var(--success); font-weight: 700;">0 ₽</span>
             </div>
 
-            <button class="btn btn-primary" onclick="checkDeposit()">Проверить статус получения</button>
-            <button class="btn btn-outline" onclick="openSupport()">Открыть спор / Поддержка</button>
+            <button class="btn" onclick="registerDeal()">Зарегистрировать сделку</button>
         </div>
     </div>
 
-    <!-- Вкладка 2: Создание сделки -->
-    <div id="create-deal" class="tab-content">
-        <div class="card">
-            <div class="card-title">Параметры сделки</div>
-
-            <div class="form-group">
-                <label>Тип актива</label>
-                <select class="form-control" id="assetType">
-                    <option value="gift">NFT Подарок (Telegram Gift)</option>
-                    <option value="stars">Telegram Stars</option>
-                    <option value="other">Цифровой товар / Услуга</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>Стоимость (в Telegram Stars)</label>
-                <input type="number" class="form-control" id="priceInput" placeholder="Например: 500" oninput="calcFee()">
-            </div>
-
-            <div class="form-group">
-                <label>Комиссия гаранта (Фиксированная)</label>
-                <input type="text" class="form-control" value="25 Stars" readonly style="color: var(--text-muted);">
-            </div>
-
-            <div class="info-row" style="margin-top: 4px;">
-                <span class="label">Итого к оплате покупателем:</span>
-                <span class="val" id="totalCalc">0 Stars</span>
-            </div>
-
-            <button class="btn btn-primary" onclick="createDeal()">Сгенерировать ссылку сделки</button>
+    <!-- Вкладка 2: Список сделок -->
+    <div id="my-deals" class="tab-content">
+        <div id="dealsList" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Сделки будут появляться тут -->
         </div>
     </div>
 
@@ -382,14 +254,12 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Отображение данных юзера из Telegram
         const user = tg.initDataUnsafe?.user;
         if (user) {
             document.getElementById('userName').textContent = user.first_name || 'Пользователь';
             document.getElementById('userAvatar').textContent = (user.first_name || 'U')[0].toUpperCase();
         }
 
-        // Переключение вкладок
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -397,31 +267,71 @@
             event.target.classList.add('active');
             document.getElementById(tabId).classList.add('active');
             
-            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            if (tabId === 'my-deals') renderDeals();
         }
 
-        // Расчет итоговой суммы
-        function calcFee() {
+        function calcTotal() {
             const price = parseInt(document.getElementById('priceInput').value) || 0;
-            const total = price > 0 ? price + 25 : 0;
-            document.getElementById('totalCalc').textContent = `${total} Stars`;
+            document.getElementById('giftPriceDisplay').textContent = `${price} ₽`;
+            const total = price > 0 ? price + 250 : 0;
+            document.getElementById('totalDisplay').textContent = `${total} ₽`;
         }
 
-        function checkDeposit() {
-            tg.showAlert("Проверка поступления актива... Если актив передан, статус обновится автоматически.");
-        }
+        function registerDeal() {
+            const name = document.getElementById('giftName').value.trim();
+            const price = parseInt(document.getElementById('priceInput').value);
 
-        function openSupport() {
-            tg.showAlert("Обращение отправлено модераторам. Арбитр подключится к сделке в течение 5 минут.");
-        }
-
-        function createDeal() {
-            const price = document.getElementById('priceInput').value;
-            if (!price || price <= 0) {
-                tg.showAlert("Введите корректную сумму сделки.");
+            if (!name) {
+                tg.showAlert("Укажите название NFT подарка!");
                 return;
             }
-            tg.showAlert(`Сделка сформирована! Ссылка скопирована в буфер обмена.`);
+            if (!price || price <= 0) {
+                tg.showAlert("Укажите корректную сумму сделки в рублях!");
+                return;
+            }
+
+            const deal = {
+                id: Math.floor(100000 + Math.random() * 900000),
+                name: name,
+                price: price,
+                total: price + 250,
+                date: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                status: 'Ожидает заморозки подарка'
+            };
+
+            let deals = JSON.parse(localStorage.getItem('user_deals') || '[]');
+            deals.unshift(deal);
+            localStorage.setItem('user_deals', JSON.stringify(deals));
+
+            tg.showAlert(`Сделка #${deal.id} успешно создана!`);
+            document.getElementById('giftName').value = '';
+            document.getElementById('priceInput').value = '';
+            calcTotal();
+
+            switchTab('my-deals');
+        }
+
+        function renderDeals() {
+            const list = document.getElementById('dealsList');
+            let deals = JSON.parse(localStorage.getItem('user_deals') || '[]');
+
+            if (deals.length === 0) {
+                list.innerHTML = `<div class="card" style="text-align: center; color: var(--text-muted);">Активных сделок пока нет</div>`;
+                return;
+            }
+
+            list.innerHTML = deals.map(d => `
+                <div class="card">
+                    <div class="card-title">
+                        <span>Сделка #${d.id}</span>
+                        <span style="color: var(--warning); font-size: 12px;">${d.status}</span>
+                    </div>
+                    <div class="info-row"><span class="label">Подарок:</span><span class="val">${d.name}</span></div>
+                    <div class="info-row"><span class="label">Сумма продавца:</span><span class="val">${d.price} ₽</span></div>
+                    <div class="info-row"><span class="label">Итого с технической комиссией:</span><span class="val">${d.total} ₽</span></div>
+                    <button class="btn btn-outline" style="margin-top: 6px;" onclick="tg.showAlert('Ссылка на сделку #${d.id} скопирована')">Скопировать ссылку для покупателя</button>
+                </div>
+            `).join('');
         }
     </script>
 </body>
