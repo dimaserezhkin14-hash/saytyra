@@ -75,33 +75,6 @@
             justify-content: space-between;
         }
 
-        .role-switch {
-            display: flex;
-            background: #0b0c10;
-            border: 1px solid var(--card-border);
-            padding: 4px;
-            border-radius: 12px;
-            gap: 4px;
-        }
-
-        .role-btn {
-            flex: 1;
-            padding: 10px;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 13px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .role-btn.active {
-            background: var(--card-border);
-            color: var(--text-main);
-        }
-
         .form-group {
             display: flex;
             flex-direction: column;
@@ -147,7 +120,7 @@
         }
 
         .action-box .value {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: var(--accent);
             margin-top: 4px;
@@ -176,6 +149,7 @@
             color: #fff;
             transition: 0.2s;
             box-shadow: 0 4px 16px var(--accent-glow);
+            text-align: center;
         }
 
         .btn:active {
@@ -220,17 +194,7 @@
         .badge.success { background: rgba(34, 197, 94, 0.15); color: var(--success); }
 
         .hidden { display: none !important; }
-
-        .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3px solid var(--card-border);
-            border-top: 3px solid var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 10px auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .text-center { text-align: center; }
     </style>
 </head>
 <body>
@@ -240,24 +204,18 @@
         <p>Безопасные сделки с NFT подарками</p>
     </div>
 
-    <!-- Переключатель роли для демо/теста -->
-    <div class="role-switch">
-        <button class="role-btn active" id="btnSellerTab" onclick="switchRole('seller')">Я Продавец</button>
-        <button class="role-btn" id="btnBuyerTab" onclick="switchRole('buyer')">Я Покупатель</button>
-    </div>
-
-    <!-- ================= ПРОДАВЕЦ ================= -->
-    <div id="sellerSection">
-        <!-- Шаг С1: Создание сделки -->
+    <!-- ================= ИНТЕРФЕЙС ПРОДАВЦА (СОЗДАНИЕ СДЕЛКИ) ================= -->
+    <div id="sellerView">
+        <!-- Шаг 1: Форма создания -->
         <div id="sellerStep1" class="card">
-            <div class="card-title">📦 Новая сделка</div>
+            <div class="card-title">📦 Новая сделка (Только для продавцов)</div>
             <div class="form-group">
                 <label>Название подарка</label>
                 <input type="text" class="form-control" id="giftName" placeholder="Например: Владосик Мишка">
             </div>
             <div class="form-group">
                 <label>Сумма сделки (в рублях)</label>
-                <input type="number" class="form-control" id="giftPrice" placeholder="1500" oninput="calcSellerTotal()">
+                <input type="number" class="form-control" id="giftPrice" placeholder="1500" oninput="calcTotal()">
             </div>
             <div class="info-row">
                 <span class="label">Вы получите:</span>
@@ -267,57 +225,58 @@
                 <span class="label">Комиссия передачи:</span>
                 <span class="val" style="color: var(--warning);">2 мишки</span>
             </div>
-            <button class="btn" onclick="sellerCreateDeal()">Создать сделку</button>
+            <button class="btn" onclick="createDeal()">Создать персональную сделку</button>
         </div>
 
-        <!-- Шаг С2: Ссылка готова -->
+        <!-- Шаг 2: Ссылка на сделку получена -->
         <div id="sellerStep2" class="card hidden">
-            <div class="card-title">🔗 Ссылка на сделку</div>
-            <div class="instruction">Отправьте эту ссылку покупателю. Как только он перейдет, начнется сделка.</div>
-            <div class="action-box" onclick="copyText(document.getElementById('dealLinkText').textContent)">
-                <div style="font-size: 11px; color: var(--text-muted);">Нажмите, чтобы скопировать ссылку:</div>
-                <div class="value" id="dealLinkText">https://t.me/GuarantMiniApp_bot?start=deal_9921</div>
+            <div class="card-title">🔗 Ссылка на сделку создана</div>
+            <div class="instruction">Отправьте эту <b>личную ссылку</b> покупателю. По ней он увидит статус сделки и реквизиты:</div>
+            
+            <div class="action-box" onclick="copyText(document.getElementById('personalDealLink').textContent)">
+                <div style="font-size: 11px; color: var(--text-muted);">Нажмите, чтобы скопировать:</div>
+                <div class="value" id="personalDealLink">https://t.me/GuarantMiniApp_bot?start=deal_0000</div>
             </div>
-            <button class="btn" onclick="sellerProceedToTransfer()">Перейти к передаче подарка</button>
+
+            <button class="btn" onclick="sellerGoToDeposit()">Перейти к заморозке подарка</button>
         </div>
 
-        <!-- Шаг С3: Отправка подарка и 2 мишек на аккаунт -->
+        <!-- Шаг 3: Отправка на аккаунт гаранта -->
         <div id="sellerStep3" class="card hidden">
             <div class="card-title">
-                <span>📤 Шаг 1: Заморозка</span>
-                <span class="badge warning">Ожидание отправки</span>
+                <span>📤 Заморозка активов</span>
+                <span class="badge warning">Шаг 1</span>
             </div>
             <div class="instruction">
-                1. Отправьте подарок <b><span id="targetGiftName">Мишка</span></b> и <b>2 мишки</b> (комиссия) на официальный аккаунт гаранта:
+                1. Отправьте подарок <b><span id="targetGiftName">Мишка</span></b> и <b>2 мишки</b> (комиссия) на официальный аккаунт:
             </div>
             <div class="action-box" onclick="copyText('@GuarantRelayer')">
                 <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования аккаунта:</div>
                 <div class="value">@GuarantRelayer</div>
             </div>
             <div class="instruction">
-                2. После отправки нажмите кнопку ниже. Бот проверит поступление.
+                2. После отправки нажмите кнопку ниже. Покупатель увидит, что актив заморожен.
             </div>
-            <button class="btn btn-success" onclick="sellerSentAssets()">✅ Я отправил подарок и 2 мишки</button>
+            <button class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил подарок и 2 мишки</button>
             <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка</button>
         </div>
 
-        <!-- Шаг С4: Ожидание оплаты от покупателя -->
-        <div id="sellerStep4" class="card hidden text-center" style="align-items: center; text-align: center;">
-            <div class="card-title" style="width: 100%;">⏳ Ожидание оплаты</div>
-            <div class="spinner"></div>
+        <!-- Шаг 4: Ожидание оплаты -->
+        <div id="sellerStep4" class="card hidden text-center">
+            <div class="card-title">⏳ Ожидание оплаты от покупателя</div>
             <div class="instruction">
-                Подарок успешно заморожен на гаранте.<br>Ждем, пока покупатель переведет деньги на ваши реквизиты.
+                Подарок заморожен на гаранте.<br>Ждем, пока покупатель переведет деньги на ваши реквизиты и подтвердит оплату.
             </div>
+            <button class="btn btn-danger" onclick="openSupport()" style="margin-top: 10px;">🆘 Поддержка</button>
         </div>
 
-        <!-- Шаг С5: Проверка денег продавцом -->
+        <!-- Шаг 5: Проверка денег продавцом -->
         <div id="sellerStep5" class="card hidden">
             <div class="card-title">💰 Проверьте поступление денег</div>
             <div class="instruction">
-                Покупатель отметил, что перевел <b><span id="finalBuyerPaidSum">0</span> ₽</b> на ваши реквизиты.<br><br>
-                Проверьте свой банк/счет. Если деньги пришли — подтверждайте.
+                Покупатель перевел средства на ваши реквизиты.<br>Проверьте свой банк. Если деньги пришли — подтверждайте.
             </div>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button class="btn btn-success" style="flex:1;" onclick="sellerConfirmedMoney()">💰 Деньги пришли</button>
                 <button class="btn btn-danger" style="flex:1;" onclick="openSupport()">🆘 Денег нет (Спор)</button>
             </div>
@@ -325,151 +284,135 @@
     </div>
 
 
-    <!-- ================= ПОКУПАТЕЛЬ ================= -->
-    <div id="buyerSection" class="hidden">
-        <!-- Шаг Б1: Ожидание гаранта -->
-        <div id="buyerStep1" class="card">
-            <div class="card-title">
-                <span>🛡 Сделка #9921</span>
-                <span class="badge warning" id="buyerDealStatusBadge">Проверка гаранта</span>
-            </div>
-            <div class="instruction" id="buyerInstructionText">
-                Продавец создает сделку и отправляет подарок с комиссией на аккаунт <b>@GuarantRelayer</b>.<br><br>
-                Подождите пару секунд, статус обновится автоматически...
-            </div>
-            <div class="spinner" id="buyerSpinner"></div>
-            <div class="hidden" id="buyerPaymentBlock">
-                <hr>
-                <div class="info-row"><span class="label">Подарок:</span><span class="val" id="buyerGiftName">Мишка</span></div>
-                <div class="info-row"><span class="label">Сумма к оплате:</span><span class="val" style="color: var(--success);" id="buyerPriceVal">1500 ₽</span></div>
-                <br>
-                <div class="instruction">Переведите указанную сумму на реквизиты продавца ниже:</div>
-                <div class="action-box" onclick="copyText('+79991234567')">
-                    <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования реквизитов:</div>
-                    <div class="value">+7 (999) 123-45-67 (Сбер/Т-Банк)</div>
-                </div>
-                <button class="btn btn-success" onclick="buyerPaidAction()">✅ Я перевел деньги продавцу</button>
-            </div>
-            <button class="btn btn-danger" onclick="openSupport()" style="margin-top: 10px;">🆘 Поддержка</button>
+    <!-- ================= ИНТЕРФЕЙС ПОКУПАТЕЛЯ ================= -->
+    <div id="buyerNavView" class="card hidden">
+        <div class="card-title">
+            <span>🛡 Сделка <span id="buyerDealIdView">#0000</span></span>
+            <span class="badge warning" id="buyerStatusBadge">Ожидание продавца</span>
         </div>
 
-        <!-- Шаг Б2: Финал для покупателя -->
-        <div id="buyerStepFinal" class="card hidden text-center" style="align-items: center; text-align: center;">
-            <div class="card-title" style="width: 100%; color: var(--success);">🎉 Сделка завершена!</div>
-            <div class="spinner"></div>
-            <div class="instruction">
-                Оплата подтверждена продавцом.<br>Бот передает подарок на ваш аккаунт прямо сейчас!
-            </div>
+        <div class="info-row"><span class="label">Подарок:</span><span class="val" id="bGiftName">—</span></div>
+        <div class="info-row"><span class="label">Сумма:</span><span class="val" style="color: var(--success);" id="bGiftPrice">0 ₽</span></div>
+        <hr>
+
+        <!-- Статусные блоки для покупателя -->
+        <div id="buyerStatusWaiting" class="instruction text-center">
+            ⏳ Продавец еще не передал подарок и комиссию на аккаунт <b>@GuarantRelayer</b>.<br>Как только передаст — здесь появятся реквизиты для оплаты.
         </div>
+
+        <div id="buyerStatusReadyToPay" class="hidden">
+            <div class="instruction" style="margin-bottom: 8px;">
+                ✅ <b>Продавец передал гифт гаранту!</b> Переведите указанную сумму на реквизиты продавца ниже:
+            </div>
+            <div class="action-box" onclick="copyText('+79991234567')">
+                <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования реквизитов:</div>
+                <div class="value">+7 (999) 123-45-67 (Сбер/Т-Банк)</div>
+            </div>
+            <button class="btn btn-success" style="margin-top: 12px;" onclick="buyerPaidAction()">✅ Я перевел деньги продавцу</button>
+        </div>
+
+        <div id="buyerStatusCheck" class="instruction text-center hidden">
+            ⏳ Вы подтвердили перевод. Ожидаем подтверждения получения от продавца...
+        </div>
+
+        <div id="buyerStatusFinished" class="instruction text-center hidden" style="color: var(--success); font-weight: 700;">
+            🎉 Оплата подтверждена! Бот переводит подарок на ваш аккаунт.
+        </div>
+
+        <button class="btn btn-danger" onclick="openSupport()" style="margin-top: 10px;">🆘 Поддержка (-1003589174040)</button>
     </div>
+
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
         const GROUP_ID = "-1003589174040";
-        let currentDeal = { name: "Мишка", price: 1500 };
+        let activeDealId = Math.floor(1000 + Math.random() * 9000);
 
-        // Переключение вкладок Продавец / Покупатель (для проверки)
-        function switchRole(role) {
-            document.getElementById('btnSellerTab').classList.toggle('active', role === 'seller');
-            document.getElementById('btnBuyerTab').classList.toggle('active', role === 'buyer');
-            document.getElementById('sellerSection').classList.toggle('hidden', role !== 'seller');
-            document.getElementById('buyerSection').classList.toggle('hidden', role !== 'buyer');
-        }
+        // Проверяем, открыта ли страница по персональной ссылке с параметром start (для покупателя)
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            // Либо через Telegram startapp параметры, либо через query string
+            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('start');
 
-        function calcSellerTotal() {
-            const p = parseInt(document.getElementById('giftPrice').value) || 0;
-            document.getElementById('sellerGetAmount').textContent = p.toLocaleString() + ' ₽';
-        }
+            if (startParam && startParam.includes('deal')) {
+                // Переключаем интерфейс в режим Покупателя
+                document.getElementById('sellerView').classList.add('hidden');
+                document.getElementById('buyerNavView').classList.remove('hidden');
+                document.getElementById('buyerDealIdView').textContent = '#' + startParam.replace('deal_', '');
+            }
+        };
 
         // --- ЛОГИКА ПРОДАВЦА ---
-        function sellerCreateDeal() {
+        function createDeal() {
             const name = document.getElementById('giftName').value.trim();
             const price = parseInt(document.getElementById('giftPrice').value);
             if (!name || !price || price <= 0) {
                 tg.showAlert("Заполните корректно название и сумму!");
                 return;
             }
-            currentDeal = { name, price };
-            document.getElementById('dealLinkText').textContent = `https://t.me/GuarantMiniApp_bot?start=deal_${Math.floor(1000+Math.random()*9000)}`;
+
+            document.getElementById('sellerGetAmount').textContent = price.toLocaleString() + ' ₽';
             
+            // Генерируем персональную личную ссылку на сделку
+            const link = `https://t.me/GuarantMiniApp_bot?start=deal_${activeDealId}`;
+            document.getElementById('personalDealLink').textContent = link;
+
             document.getElementById('sellerStep1').classList.add('hidden');
             document.getElementById('sellerStep2').classList.remove('hidden');
         }
 
-        function sellerProceedToTransfer() {
-            document.getElementById('targetGiftName').textContent = currentDeal.name;
+        function sellerGoToDeposit() {
+            document.getElementById('targetGiftName').textContent = document.getElementById('giftName').value;
             document.getElementById('sellerStep2').classList.add('hidden');
             document.getElementById('sellerStep3').classList.remove('hidden');
         }
 
-        function sellerSentAssets() {
+        function sellerDoneDeposit() {
             document.getElementById('sellerStep3').classList.add('hidden');
             document.getElementById('sellerStep4').classList.remove('hidden');
 
-            // Эмуляция того, что бот проверил и покупатель получил данные для оплаты
-            setTimeout(() => {
-                // Автоматически переводим демо-покупателя в режим оплаты для удобства теста
-                document.getElementById('buyerSpinner').classList.add('hidden');
-                document.getElementById('buyerDealStatusBadge').textContent = "Ожидает оплаты";
-                document.getElementById('buyerInstructionText').innerHTML = "Продавец передал подарок гаранту! Можете оплачивать сделку.";
-                document.getElementById('buyerGiftName').textContent = currentDeal.name;
-                document.getElementById('buyerPriceVal').textContent = currentDeal.price.toLocaleString() + ' ₽';
-                document.getElementById('buyerPaymentBlock').classList.remove('hidden');
-            }, 3000);
+            // Симулируем для покупателя, что продавец скинул подарок (в реальном боте это меняется по клику или через бэкенд)
+            // Здесь для теста можно обновить локально
+            localStorage.setItem(`deal_${activeDealId}_status`, 'deposited');
         }
 
         function sellerConfirmedMoney() {
             document.getElementById('sellerStep5').classList.add('hidden');
             document.getElementById('sellerStep4').classList.remove('hidden');
             document.getElementById('sellerStep4').innerHTML = `
-                <div class="card-title" style="width: 100%; color: var(--success);">🎉 Сделка успешно завершена!</div>
-                <div class="instruction">Вы подтвердили получение средств. Бот автоматически перевел подарок покупателю.</div>
-                <button class="btn" onclick="tg.close()" style="margin-top: 15px;">Закрыть</button>
+                <div class="card-title" style="color: var(--success);">🎉 Сделка завершена!</div>
+                <div class="instruction">Вы подтвердили получение средств. Бот передал подарок покупателю.</div>
             `;
         }
 
         // --- ЛОГИКА ПОКУПАТЕЛЯ ---
         function buyerPaidAction() {
-            document.getElementById('buyerPaymentBlock').classList.add('hidden');
-            document.getElementById('buyerDealStatusBadge').textContent = "Проверка оплаты";
-            document.getElementById('buyerDealStatusBadgeclassName').className = "badge warning";
-            document.getElementById('buyerSpinner').classList.remove('hidden');
-            document.getElementById('buyerInstructionText').innerHTML = "Вы подтвердили перевод денег. Ожидаем подтверждения от продавца...";
+            document.getElementById('buyerStatusReadyToPay').classList.add('hidden');
+            document.getElementById('buyerStatusCheck').classList.remove('hidden');
+            document.getElementById('buyerStatusBadge').textContent = "Проверка оплаты";
 
-            // Уведомляем продавца (переключаем экран продавца на шаг проверки денег)
+            // Переключаем экран продавца на шаг подтверждения денег (для теста)
             setTimeout(() => {
                 document.getElementById('sellerStep4').classList.add('hidden');
                 document.getElementById('sellerStep5').classList.remove('hidden');
-                document.getElementById('finalBuyerPaidSum').textContent = currentDeal.price.toLocaleString();
-            }, 2000);
+            }, 1500);
         }
 
-        // Если продавец нажал "Деньги пришли", покупатель видит финал
-        function triggerBuyerFinal() {
-            document.getElementById('buyerStep1').classList.add('hidden');
-            document.getElementById('buyerStepFinal').classList.remove('hidden');
-        }
-
-        // Переопределим sellerConfirmedMoney чтобы обновлялся и покупатель в демо
-        const oldSellerConfirmedMoney = sellerConfirmedMoney;
-        sellerConfirmedMoney = function() {
-            oldSellerConfirmedMoney();
-            triggerBuyerFinal();
-        }
-
-        // --- ПОДДЕРЖКА / СПОР ---
+        // --- ПОДДЕРЖКА / УВЕДОМЛЕНИЯ В ГРУППУ ---
         function openSupport() {
+            // Отправка данных о споре в бот/группу
             tg.sendData(JSON.stringify({
                 action: "support_dispute",
                 group_id: GROUP_ID,
-                deal: currentDeal
+                deal_id: activeDealId
             }));
+            
             tg.showAlert(`Спор отправлен в группу поддержки (${GROUP_ID}). Администратор скоро подключится.`);
         }
 
-        // --- НАДЕЖНОЕ КОПИРОВАНИЕ ДЛЯ ТЕЛЕГРАМА ---
+        // --- НАДЕЖНОЕ КОПИРОВАНИЕ ---
         function copyText(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(() => {
@@ -504,8 +447,6 @@
                     message: text,
                     buttons: [{ type: "ok" }]
                 });
-            } else {
-             alert("Скопировано: " + text);
             }
         }
     </script>
