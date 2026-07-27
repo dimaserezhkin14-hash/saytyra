@@ -15,7 +15,7 @@
         body { background-color: var(--bg-color); color: var(--text-main); padding: 16px; display: flex; flex-direction: column; gap: 16px; min-height: 100vh; }
         .header { text-align: center; padding: 10px 0; position: relative; }
         .header h1 { font-size: 20px; font-weight: 800; }
-        .support-btn-header { display: inline-flex; align-items: center; gap: 6px; background: rgba(46, 166, 255, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none; margin-top: 8px; }
+        .support-btn-header { display: inline-flex; align-items: center; gap: 6px; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; margin-top: 8px; }
         .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
         .card-title { font-size: 17px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -41,8 +41,8 @@
     <div class="header">
         <h1>🛡 Гарант Сервис</h1>
         <p style="font-size: 12px; color: var(--text-muted);">Безопасные сделки с NFT подарками</p>
-        <!-- КНОПКА ПОДДЕРЖКИ В ШАПКЕ -->
-        <a href="https://t.me/YourSupportUsername" target="_blank" class="support-btn-header">💬 Написать в поддержку</a>
+        <!-- КНОПКА ПОДДЕРЖКИ В АПКЕ (ОТПРАВЛЯЕТ СИГНАЛ В ГРУППУ) -->
+        <button type="button" class="support-btn-header" onclick="callSupport()">💬 Вызвать поддержку</button>
     </div>
 
     <!-- ИНТЕРФЕЙС ПРОДАВЦА -->
@@ -105,6 +105,7 @@
 
         const BOT_TOKEN = "8987632200:AAG2bS9DJy9sGzuUdAZ-kiuZZB0jNXVeo3Y";
         const GROUP_ID = "-1003589174040";
+        const BACKEND_URL = "http://localhost:8080"; // 👈 Укажите адрес вашего запущенного бэкенда на сервере
         let generatedBuyerLink = "";
 
         window.onload = function() {
@@ -122,6 +123,18 @@
                     document.getElementById('rCard').textContent = data.card;
                     document.getElementById('rComment').textContent = 'Комментарий: ' + (data.comment || 'Нет');
                 } catch(e) { console.error(e); }
+            } else {
+                // Восстанавливаем состояние продавца из памяти, чтобы не сбрасывалось при перезаходе
+                const savedStep = localStorage.getItem('seller_step');
+                if (savedStep === '2') {
+                    document.getElementById('sellerStep1').classList.add('hidden');
+                    document.getElementById('sellerStep2').classList.remove('hidden');
+                } else if (savedStep === '3') {
+                    document.getElementById('sellerStep1').classList.add('hidden');
+                    document.getElementById('sellerStep3').classList.remove('hidden');
+                    generatedBuyerLink = localStorage.getItem('buyer_link') || '';
+                    document.getElementById('buyerLinkText').textContent = generatedBuyerLink;
+                }
             }
         };
 
@@ -136,6 +149,7 @@
                 return;
             }
 
+            localStorage.setItem('seller_step', '2');
             document.getElementById('sellerStep1').classList.add('hidden');
             document.getElementById('sellerStep2').classList.remove('hidden');
         }
@@ -157,23 +171,18 @@
 
             generatedBuyerLink = `https://t.me/GuarantMiniApp_bot?start=deal_${dealId}`;
 
-            // 1. Регистрируем сделку в памяти бота
+            // 1. Регистрируем сделку в боте
             try {
-                await fetch('http://localhost:8080/register_deal', {
+                await fetch(`${BACKEND_URL}/register_deal`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        deal_id: dealId,
-                        gift: gift,
-                        price: price,
-                        bank: bank,
-                        card: card,
-                        comment: comment,
-                        seller: username
+                        deal_id: dealId, gift: gift, price: price,
+                        bank: bank, card: card, comment: comment, seller: username
                     })
                 });
             } catch (e) {
-                console.log("Бот локальный, сделка сохранена логически.");
+                console.log("Ошибка бэкенда регистрации сделки");
             }
 
             // 2. Отправляем уведомление в группу админам
@@ -202,7 +211,10 @@
                     })
                 });
 
-                // Переключаем окно на Шаг 3 (со ссылкой)
+                // Сохраняем состояние в память браузера
+                localStorage.setItem('seller_step', '3');
+                localStorage.setItem('buyer_link', generatedBuyerLink);
+
                 document.getElementById('sellerStep2').classList.add('hidden');
                 document.getElementById('sellerStep3').classList.remove('hidden');
                 document.getElementById('buyerLinkText').textContent = generatedBuyerLink;
@@ -211,6 +223,23 @@
                 alert("Ошибка отправки: " + err);
                 btn.disabled = false;
                 btn.textContent = "✅ Я отправил активы";
+            }
+        }
+
+        async function callSupport() {
+            const user = tg.initDataUnsafe?.user;
+            const username = user ? (user.username ? '@' + user.username : user.first_name) : 'Неизвестно';
+            const userId = user ? user.id : '0';
+
+            try {
+                await fetch(`${BACKEND_URL}/support_request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: username, user_id: userId })
+                });
+                alert("Запрос отправлен! Администратор свяжется с вами в ближайшее время.");
+            } catch (e) {
+                alert("Не удалось отправить запрос в поддержку. Попробуйте позже.");
             }
         }
 
