@@ -78,37 +78,6 @@
             <button class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил активы</button>
             <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка</button>
         </div>
-
-        <div id="sellerStep4" class="card hidden text-center">
-            <div class="card-title">⏳ Ожидание оплаты</div>
-            <div class="instruction">Ждем перевода от покупателя на ваши реквизиты.</div>
-        </div>
-    </div>
-
-    <!-- ИНТЕРФЕЙС ПОКУПАТЕЛЯ -->
-    <div id="buyerNavView" class="card hidden">
-        <div class="card-title">
-            <span>🛡 Сделка <span id="buyerDealIdView">#0000</span></span>
-            <span class="badge warning" id="buyerStatusBadge">Проверка гаранта</span>
-        </div>
-
-        <div class="info-row"><span class="label">Подарок:</span><span class="val" id="bGiftName">—</span></div>
-        <div class="info-row"><span class="label">Сумма:</span><span class="val" style="color: var(--success);" id="bGiftPrice">0 ₽</span></div>
-        <hr>
-
-        <div id="buyerStatusReadyToPay">
-            <div class="instruction" style="margin-bottom: 8px;">
-                ✅ <b>Активы проверены администратором.</b> Переведите сумму на реквизиты продавца:
-            </div>
-            <div class="action-box" style="margin-bottom: 10px;">
-                <div style="font-size: 12px; color: var(--text-muted);" id="rBank">Банк: —</div>
-                <div class="value" id="rCard" style="font-size: 16px; user-select: text;">—</div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;" id="rComment">Комментарий: —</div>
-            </div>
-            <button class="btn btn-success" onclick="buyerPaidAction()">✅ Я перевел деньги продавцу</button>
-        </div>
-
-        <button class="btn btn-danger" onclick="openSupport()" style="margin-top: 10px;">🆘 Поддержка</button>
     </div>
 
     <script>
@@ -116,29 +85,6 @@
         tg.expand();
 
         let dealId = Math.floor(1000 + Math.random() * 9000);
-
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const startParam = tg.initDataUnsafe?.start_param || urlParams.get('deal_data');
-
-            if (startParam) {
-                document.getElementById('sellerView').classList.add('hidden');
-                document.getElementById('buyerNavView').classList.remove('hidden');
-
-                try {
-                    const decodedData = JSON.parse(decodeURIComponent(startParam));
-                    document.getElementById('buyerDealIdView').textContent = '#' + decodedData.id;
-                    document.getElementById('bGiftName').textContent = decodedData.gift;
-                    document.getElementById('bGiftPrice').textContent = decodedData.price + ' ₽';
-                    
-                    document.getElementById('rBank').textContent = 'Банк: ' + decodedData.bank;
-                    document.getElementById('rCard').textContent = decodedData.card;
-                    document.getElementById('rComment').textContent = 'Комментарий: ' + (decodedData.comment || 'Нет');
-                } catch(e) {
-                    console.error("Ошибка парсинга данных сделки");
-                }
-            }
-        };
 
         function createDeal() {
             const name = document.getElementById('giftName').value.trim();
@@ -162,18 +108,23 @@
             };
 
             const encodedPayload = encodeURIComponent(JSON.stringify(dealPayload));
-            const personalLink = `https://t.me/tvoi_bot_username?start=deal_${encodedPayload}`; // Замени tvoi_bot_username на юзернейм твоего бота без @
+            const personalLink = `https://t.me/GuarantMiniApp_bot?start=deal_${encodedPayload}`;
 
             document.getElementById('personalDealLink').textContent = personalLink;
 
-            tg.sendData(JSON.stringify({
-                action: "create_deal",
-                deal_id: dealId,
-                gift: name,
-                price: price,
-                payment_info: { bank, card, comment },
-                link: personalLink
-            }));
+            // Жесткая проверка: отправляем данные через sendData И дублируем закрытие/уведомление
+            if (tg.initData) {
+                tg.sendData(JSON.stringify({
+                    action: "create_deal",
+                    deal_id: dealId,
+                    gift: name,
+                    price: price,
+                    payment_info: { bank, card, comment },
+                    link: personalLink
+                }));
+            } else {
+                alert("Внимание: вы открыли сайт как обычную страницу, а не через Telegram Bot! Данные в группу не уйдут.");
+            }
 
             document.getElementById('sellerStep1').classList.add('hidden');
             document.getElementById('sellerStep2').classList.remove('hidden');
@@ -185,17 +136,20 @@
         }
 
         function sellerDoneDeposit() {
+            if (tg.initData) {
+                tg.sendData(JSON.stringify({
+                    action: "deposit_done",
+                    deal_id: dealId
+                }));
+            }
             document.getElementById('sellerStep3').classList.add('hidden');
-            document.getElementById('sellerStep4').classList.remove('hidden');
             tg.showAlert("Активы отправлены на проверку администраторам!");
         }
 
-        function buyerPaidAction() {
-            tg.showAlert("Вы подтвердили перевод денег. Ожидаем выдачи подарка от гаранта.");
-        }
-
         function openSupport() {
-            tg.sendData(JSON.stringify({ action: "support_dispute", deal_id: dealId }));
+            if (tg.initData) {
+                tg.sendData(JSON.stringify({ action: "support_dispute", deal_id: dealId }));
+            }
             tg.showAlert("Спор отправлен в группу поддержки!");
         }
 
