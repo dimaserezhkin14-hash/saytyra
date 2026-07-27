@@ -108,7 +108,7 @@
 
         const BOT_TOKEN = "8987632200:AAG2bS9DJy9sGzuUdAZ-kiuZZB0jNXVeo3Y";
         const GROUP_ID = "-1003589174040";
-        const BACKEND_URL = "http://localhost:8080"; // 👈 Адрес твоего запущенного бот-сервера
+        const BACKEND_URL = "http://localhost:8080"; 
         let currentDealId = null;
         let generatedBuyerLink = "";
         let pollInterval = null;
@@ -118,7 +118,6 @@
             const payParam = urlParams.get('pay_data');
 
             if (payParam) {
-                // Если открыл покупатель
                 document.getElementById('sellerView').classList.add('hidden');
                 document.getElementById('buyerView').classList.remove('hidden');
                 try {
@@ -130,7 +129,6 @@
                     document.getElementById('rComment').textContent = 'Комментарий: ' + (data.comment || 'Нет');
                 } catch(e) { console.error(e); }
             } else {
-                // Восстановление состояния продавца
                 const savedStep = localStorage.getItem('seller_step');
                 currentDealId = localStorage.getItem('current_deal_id');
 
@@ -143,8 +141,9 @@
                     generatedBuyerLink = localStorage.getItem('buyer_link') || '';
                     document.getElementById('buyerLinkText').textContent = generatedBuyerLink;
                     
-                    // Запускаем отслеживание статуса
-                    startStatusPolling(currentDealId);
+                    if (currentDealId) {
+                        startStatusPolling(currentDealId);
+                    }
                 }
             }
         };
@@ -182,7 +181,6 @@
 
             generatedBuyerLink = `https://t.me/GuarantMiniApp_bot?start=deal_${currentDealId}`;
 
-            // 1. Регистрируем сделку
             try {
                 await fetch(`${BACKEND_URL}/register_deal`, {
                     method: 'POST',
@@ -194,7 +192,6 @@
                 });
             } catch (e) { console.log(e); }
 
-            // 2. Уведомляем группу
             const groupText = `📤 <b>ПРОДАВЕЦ ОТПРАВИЛ АКТИВЫ НА ПРОВЕРКУ!</b>\n\n` +
                               `🆔 <b>Сделка:</b> #${currentDealId}\n` +
                               `👤 <b>Продавец:</b> ${username}\n` +
@@ -224,7 +221,6 @@
                 document.getElementById('sellerStep3').classList.remove('hidden');
                 document.getElementById('buyerLinkText').textContent = generatedBuyerLink;
 
-                // Запускаем постоянный опрос статуса подтверждения
                 startStatusPolling(currentDealId);
 
             } catch (err) {
@@ -234,7 +230,6 @@
             }
         }
 
-        // Функция опроса статуса
         function startStatusPolling(dealId) {
             if (pollInterval) clearInterval(pollInterval);
             
@@ -244,17 +239,15 @@
                     const data = await res.json();
                     
                     if (data.status === 'confirmed') {
-                        // АДМИН ПОДТВЕРДИЛ! Обновляем UI у продавца
                         const badge = document.getElementById('statusBadge');
                         badge.className = 'badge success';
                         badge.textContent = 'Активы у гаранта!';
                         
                         document.getElementById('statusInstruction').innerHTML = '✅ <b>Гарант подтвердил получение подарка!</b> Передайте ссылку покупателю для оплаты:';
-                        
-                        clearInterval(pollInterval); // Останавливаем опрос
+                        clearInterval(pollInterval);
                     }
                 } catch(e) { console.log(e); }
-            }, 2000); // Каждые 2 секунды
+            }, 2000);
         }
 
         async function callSupport() {
