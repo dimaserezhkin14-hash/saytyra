@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Шашки Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #3b82f6;
+            --gold: #eab308;
+            --green: #22c55e;
+            --red: #ef4444;
+            --text: #f8fafc;
+            --board-light: #e2e8f0;
+            --board-dark: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 380px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid #475569;
+            margin-bottom: 12px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .balance {
+            color: var(--gold);
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .game-status {
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+            background: var(--card);
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--gold);
+            margin-bottom: 10px;
+            border: 1px solid #475569;
+        }
+
+        /* ДОСКА ШАШЕК */
+        .board-container {
+            width: 100%;
+            max-width: 380px;
+            aspect-ratio: 1 / 1;
+            background: #020617;
+            padding: 6px;
+            border-radius: 12px;
+            border: 2px solid #475569;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+        }
+
+        .board {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .cell.light { background-color: var(--board-light); }
+        .cell.dark { background-color: var(--board-dark); }
+        .cell.selected { background-color: #3b82f6 !important; }
+        .cell.highlight {
+            background-color: #22c55e !important;
+        }
+        .cell.highlight::after {
+            content: '';
+            width: 14px;
+            height: 14px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+        }
+
+        /* ШАШКИ */
+        .piece {
+            width: 82%;
+            height: 82%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: inset 0 -4px 4px rgba(0,0,0,0.4), 0 4px 6px rgba(0,0,0,0.5);
+            transition: transform 0.15s ease;
+        }
+
+        .piece.white {
+            background: linear-gradient(135deg, #ffffff, #cbd5e1);
+            border: 2px solid #94a3b8;
+            color: #000;
+        }
+
+        .piece.black {
+            background: linear-gradient(135deg, #1e293b, #020617);
+            border: 2px solid #000;
+            color: #fff;
+        }
+
+        .piece.king::after {
+            content: '👑';
+            font-size: 16px;
+        }
+
+        .controls {
+            width: 100%;
+            max-width: 380px;
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        .btn-reset { background: var(--accent); color: #fff; }
+        .btn-ai { background: var(--green); color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="user-info">
+            <span id="username">👤 Player</span>
+        </div>
+        <div class="balance">⭐️ <span id="stars">250</span></div>
+    </div>
+
+    <div class="game-status" id="status">Ваш ход (Белые)</div>
+
+    <div class="board-container">
+        <div class="board" id="board"></div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-reset" onclick="resetGame()">Новая игра</button>
+        <button class="btn btn-ai" onclick="makeAIMove()">Ход Бота</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        if (tg.initDataUnsafe?.user) {
+            document.getElementById('username').innerText = `👤 ${tg.initDataUnsafe.user.first_name || tg.initDataUnsafe.user.username}`;
+        }
+
+        const BOARD_SIZE = 8;
+        let boardState = [];
+        let selectedCell = null;
+        let validMoves = [];
+        let currentPlayer = 'W'; // 'W' - Белые (Игрок), 'B' - Чёрные (Бот)
+        let isMultiJump = false;
+
+        function initBoard() {
+            boardState = Array(8).fill(null).map(() => Array(8).fill(null));
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if ((r + c) % 2 === 1) {
+                        if (r < 3) boardState[r][c] = { color: 'B', king: false };
+                        else if (r > 4) boardState[r][c] = { color: 'W', king: false };
+                    }
+                }
+            }
+            currentPlayer = 'W';
+            selectedCell = null;
+            validMoves = [];
+            isMultiJump = false;
+            updateStatus("Ваш ход (Белые)");
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.innerHTML = '';
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const cell = document.createElement('div');
+                    const isDark = (r + c) % 2 === 1;
+                    cell.className = `cell ${isDark ? 'dark' : 'light'}`;
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    if (selectedCell && selectedCell.r === r && selectedCell.c === c) {
+                        cell.classList.add('selected');
+                    }
+
+                    if (validMoves.some(m => m.toR === r && m.toC === c)) {
+                        cell.classList.add('highlight');
+                    }
+
+                    const piece = boardState[r][c];
+                    if (piece) {
+                        const pieceEl = document.createElement('div');
+                        pieceEl.className = `piece ${piece.color === 'W' ? 'white' : 'black'} ${piece.king ? 'king' : ''}`;
+                        cell.appendChild(pieceEl);
+                    }
+
+                    cell.addEventListener('click', () => handleCellClick(r, c));
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(r, c) {
+            if (currentPlayer !== 'W') return;
+
+            const piece = boardState[r][c];
+
+            // Если кликнули по выделенному ходу
+            const move = validMoves.find(m => m.toR === r && m.toC === c);
+            if (move) {
+                executeMove(move);
+                return;
+            }
+
+            if (isMultiJump) return; // Если серия срубаний, нельзя перевыбирать
+
+            // Выбор своей фигуры
+            if (piece && piece.color === 'W') {
+                selectedCell = { r, c };
+                const allMandatoryJumps = getAllJumps('W');
+                if (allMandatoryJumps.length > 0) {
+                    validMoves = allMandatoryJumps.filter(m => m.fromR === r && m.fromC === c);
+                } else {
+                    validMoves = getPieceMoves(r, c);
+                }
+                renderBoard();
+            }
+        }
+
+        function getPieceMoves(r, c) {
+            const piece = boardState[r][c];
+            if (!piece) return [];
+            let moves = [];
+            
+            // Срубания
+            const jumps = getJumpsForPiece(r, c);
+            if (jumps.length > 0) return jumps;
+
+            // Простые ходы
+            const dirs = piece.king ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (piece.color === 'W' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
+            for (let [dr, dc] of dirs) {
+                let nr = r + dr, nc = c + dc;
+                if (piece.king) {
+                    while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !boardState[nr][nc]) {
+                        moves.push({ fromR: r, fromC: c, toR: nr, toC: nc, captures: [] });
+                        nr += dr; nc += dc;
+                    }
+                } else {
+                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !boardState[nr][nc]) {
+                        moves.push({ fromR: r, fromC: c, toR: nr, toC: nc, captures: [] });
+                    }
+                }
+            }
+            return moves;
+        }
+
+        function getJumpsForPiece(r, c) {
+            const piece = boardState[r][c];
+            if (!piece) return [];
+            let jumps = [];
+            const dirs = [[-1,-1],[-1,1],[1,-1],[1,1]];
+
+            for (let [dr, dc] of dirs) {
+                if (piece.king) {
+                    let nr = r + dr, nc = c + dc;
+                    while (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !boardState[nr][nc]) {
+                        nr += dr; nc += dc;
+                    }
+                    if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && boardState[nr][nc] && boardState[nr][nc].color !== piece.color) {
+                        let jr = nr + dr, jc = nc + dc;
+                        while (jr >= 0 && jr < 8 && jc >= 0 && jc < 8 && !boardState[jr][jc]) {
+                            jumps.push({ fromR: r, fromC: c, toR: jr, toC: jc, captures: [{ r: nr, c: nc }] });
+                            jr += dr; jc += dc;
+                        }
+                    }
+                } else {
+                    let nr = r + dr, nc = c + dc;
+                    let jr = r + 2*dr, jc = c + 2*dc;
+                    if (jr >= 0 && jr < 8 && jc >= 0 && jc < 8) {
+                        if (boardState[nr][nc] && boardState[nr][nc].color !== piece.color && !boardState[jr][jc]) {
+                            jumps.push({ fromR: r, fromC: c, toR: jr, toC: jc, captures: [{ r: nr, c: nc }] });
+                        }
+                    }
+                }
+            }
+            return jumps;
+        }
+
+        function getAllJumps(color) {
+            let allJumps = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (boardState[r][c] && boardState[r][c].color === color) {
+                        allJumps.push(...getJumpsForPiece(r, c));
+                    }
+                }
+            }
+            return allJumps;
+        }
+
+        function executeMove(move) {
+            const piece = boardState[move.fromR][move.fromC];
+            boardState[move.toR][move.toC] = piece;
+            boardState[move.fromR][move.fromC] = null;
+
+            if (move.captures.length > 0) {
+                for (let cap of move.captures) {
+                    boardState[cap.r][cap.c] = null;
+                }
+            }
+
+            // Дамка
+            if (piece.color === 'W' && move.toR === 0) piece.king = true;
+            if (piece.color === 'B' && move.toR === 7) piece.king = true;
+
+            // Проверка на серийное срубание
+            if (move.captures.length > 0) {
+                const furtherJumps = getJumpsForPiece(move.toR, move.toC);
+                if (furtherJumps.length > 0) {
+                    selectedCell = { r: move.toR, c: move.toC };
+                    validMoves = furtherJumps;
+                    isMultiJump = true;
+                    renderBoard();
+                    if (currentPlayer === 'B') setTimeout(makeAIMove, 600);
+                    return;
+                }
+            }
+
+            isMultiJump = false;
+            selectedCell = null;
+            validMoves = [];
+            currentPlayer = currentPlayer === 'W' ? 'B' : 'W';
+            
+            renderBoard();
+
+            if (currentPlayer === 'B') {
+                updateStatus("Думает Бот...");
+                setTimeout(makeAIMove, 600);
+            } else {
+                updateStatus("Ваш ход (Белые)");
+            }
+        }
+
+        // --- ИИ И КАЛЬКУЛЯТОР БОТА ---
+        function makeAIMove() {
+            let moves = [];
+            const mandatoryJumps = getAllJumps('B');
+
+            if (mandatoryJumps.length > 0) {
+                moves = mandatoryJumps;
+            } else {
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        if (boardState[r][c] && boardState[r][c].color === 'B') {
+                            moves.push(...getPieceMoves(r, c));
+                        }
+                    }
+                }
+            }
+
+            if (moves.length === 0) {
+                updateStatus("ПОБЕДА! У бота нет ходов 🎉");
+                return;
+            }
+
+            // Рандом/Минимакс выбор
+            const bestMove = moves[Math.floor(Math.random() * moves.length)];
+            executeMove(bestMove);
+        }
+
+        function updateStatus(text) {
+            document.getElementById('status').innerText = text;
+        }
+
+        function resetGame() {
+            initBoard();
+        }
+
+        initBoard();
+    </script>
+</body>
+</html>
