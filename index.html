@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Калькулятор Шашек Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.4);
+            --green: #10b981;
+            --green-glow: rgba(16, 185, 129, 0.5);
+            --red: #ef4444;
+            --text: #f8fafc;
+            --board-light: #e2e8f0;
+            --board-dark: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0b0f19 70%);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* СТАРТОВЫЙ ОВЕРЛЕЙ ДЛЯ ЗАПУСКА АУДИО */
+        .start-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(11, 15, 25, 0.95);
+            backdrop-filter: blur(15px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .start-btn {
+            padding: 16px 36px;
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .start-btn:active { transform: scale(0.95); }
+
+        /* ХЕДЕР С НАСТРОЙКАМИ */
+        .top-panel {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 12px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .row-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .selector-group {
+            display: flex;
+            gap: 4px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 3px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .pill-btn {
+            padding: 6px 10px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .pill-btn.active {
+            background: var(--accent);
+            color: #ffffff;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        /* ИНФО-БАР ОЦЕНКИ */
+        .eval-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 10px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .eval-status { font-size: 12px; color: #94a3b8; font-weight: 600; }
+        .eval-best { font-size: 15px; color: var(--green); font-weight: 800; margin-top: 2px; }
+
+        /* ДОСКА */
+        .board-wrapper {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 1 / 1;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 8px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .board {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .cell.light { background-color: var(--board-light); }
+        .cell.dark { background-color: var(--board-dark); }
+        .cell.selected { background-color: #2563eb !important; }
+
+        /* ПОДСВЕТКА ХОДОВ: ЯРКАЯ ДЛЯ ИГРОКА, ТУСКЛАЯ ДЛЯ СОПЕРНИКА */
+        .cell.best-from-player { background-color: #047857 !important; animation: pulse-green 1.5s infinite alternate; }
+        .cell.best-to-player { background-color: #10b981 !important; animation: pulse-green 1.5s infinite alternate; }
+        
+        .cell.best-from-opp { background-color: #475569 !important; opacity: 0.7; }
+        .cell.best-to-opp { background-color: #64748b !important; opacity: 0.7; }
+
+        @keyframes pulse-green {
+            0% { box-shadow: inset 0 0 5px var(--green-glow); }
+            100% { box-shadow: inset 0 0 18px var(--green); }
+        }
+
+        /* ШАШКИ */
+        .piece {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .piece.white {
+            background: radial-gradient(circle at 35% 35%, #ffffff, #cbd5e1);
+            border: 2px solid #94a3b8;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .piece.black {
+            background: radial-gradient(circle at 35% 35%, #334155, #0f172a);
+            border: 2px solid #020617;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.6);
+        }
+
+        .piece.king::after { content: '👑'; font-size: 16px; }
+
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        .controls-grid {
+            width: 100%;
+            max-width: 400px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn-action {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            color: #fff;
+            background: var(--card-bg);
+            text-align: center;
+        }
+
+        .btn-calc { background: var(--green); border: none; }
+    </style>
+</head>
+<body>
+
+    <!-- СТАРТОВЫЙ ОВЕРЛЕЙ -->
+    <div class="start-overlay" id="start-overlay">
+        <h2 style="margin-bottom: 8px;">🎯 Шашки Pro</h2>
+        <p style="color: #94a3b8; font-size: 13px; margin-bottom: 24px;">Нажми кнопку для запуска приложения и фоновой музыки</p>
+        <button class="start-btn" onclick="startApp()">Начать игру 🚀</button>
+    </div>
+
+    <!-- ВЕРХНЯЯ ПАНЕЛЬ -->
+    <div class="top-panel">
+        <div class="row-between">
+            <span style="font-size: 11px; color: #94a3b8; font-weight: 700;">Размер:</span>
+            <div class="selector-group">
+                <button class="pill-btn" onclick="changeBoardSize(6)">6x6</button>
+                <button class="pill-btn active" id="mode-8" onclick="changeBoardSize(8)">8x8</button>
+                <button class="pill-btn" onclick="changeBoardSize(10)">10x10</button>
+            </div>
+        </div>
+
+        <div class="row-between">
+            <span style="font-size: 11px; color: #94a3b8; font-weight: 700;">Моя сторона:</span>
+            <div class="selector-group">
+                <button class="pill-btn active" id="side-w" onclick="setPlayerSide('W')">⚪️ Белые</button>
+                <button class="pill-btn" id="side-b" onclick="setPlayerSide('B')">⚫️ Чёрные</button>
+            </div>
+        </div>
+
+        <div class="row-between">
+            <span style="font-size: 11px; color: #94a3b8; font-weight: 700;">Чей ход:</span>
+            <div class="selector-group">
+                <button class="pill-btn active" id="turn-w" onclick="setTurn('W')">⚪️ Ходят Белые</button>
+                <button class="pill-btn" id="turn-b" onclick="setTurn('B')">⚫️ Ходят Чёрные</button>
+            </div>
+        </div>
+
+        <div class="row-between">
+            <span style="font-size: 11px; color: #94a3b8; font-weight: 700;">Звук и Музыка:</span>
+            <div style="display: flex; gap: 6px;">
+                <button class="pill-btn active" id="toggle-music" onclick="toggleMusic()">🎵 Музыка: ВКЛ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- КАРТОЧКА ОЦЕНКИ -->
+    <div class="eval-card">
+        <div class="eval-status" id="eval-status">Анализ позиции...</div>
+        <div class="eval-best" id="best-move-text">Расчёт...</div>
+    </div>
+
+    <!-- ДОСКА -->
+    <div class="board-wrapper">
+        <div class="board" id="board"></div>
+    </div>
+
+    <!-- КНОПКИ -->
+    <div class="controls-grid">
+        <button class="btn-action" onclick="undoMove()">↩️ Назад</button>
+        <button class="btn-action" style="color: #fca5a5;" onclick="resetBoard()">🔄 Сброс</button>
+        <button class="btn-action btn-calc" onclick="calculateBestMove()">💡 Расчёт</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // АУДИО ПЛЕЙЛИСТ И НАСТРОЙКИ
+        const playlist = [
+            "track1.mp3",
+            "track2.mp3",
+            "track3.mp3",
+            "track4.mp3",
+            "track5.mp3"
+        ];
+        let currentTrackIdx = 0;
+        let audioPlayer = new Audio();
+        let isMusicOn = true;
+
+        function startApp() {
+            document.getElementById('start-overlay').style.display = 'none';
+            playTrack(currentTrackIdx);
+        }
+
+        function playTrack(idx) {
+            if (!isMusicOn) return;
+            audioPlayer.src = playlist[idx];
+            audioPlayer.volume = 0;
+            audioPlayer.play().catch(e => console.log("Audio block", e));
+            
+            // Плавное нарастание громкости (Fade In)
+            let vol = 0;
+            let fadeIn = setInterval(() => {
+                if (vol < 0.3) {
+                    vol += 0.02;
+                    audioPlayer.volume = vol;
+                } else {
+                    clearInterval(fadeIn);
+                }
+            }, 100);
+        }
+
+        // Автоматическое плавное переключение на следующий трек (Fade Out -> Next -> Fade In)
+        audioPlayer.addEventListener('timeupdate', () => {
+            if (audioPlayer.duration && (audioPlayer.duration - audioPlayer.currentTime < 3)) {
+                if (!audioPlayer.fading) {
+                    audioPlayer.fading = true;
+                    let fadeOut = setInterval(() => {
+                        if (audioPlayer.volume > 0.03) {
+                            audioPlayer.volume -= 0.03;
+                        } else {
+                            clearInterval(fadeOut);
+                            audioPlayer.fading = false;
+                            currentTrackIdx = (currentTrackIdx + 1) % playlist.length;
+                            playTrack(currentTrackIdx);
+                        }
+                    }, 200);
+                }
+            }
+        });
+
+        function toggleMusic() {
+            isMusicOn = !isMusicOn;
+            const btn = document.getElementById('toggle-music');
+            if (isMusicOn) {
+                btn.classList.add('active');
+                btn.innerText = "🎵 Музыка: ВКЛ";
+                playTrack(currentTrackIdx);
+            } else {
+                btn.classList.remove('active');
+                btn.innerText = "🎵 Музыка: ВЫКЛ";
+                audioPlayer.pause();
+            }
+        }
+
+        // ЛОГИКА ШАШЕК
+        let BOARD_SIZE = 8;
+        let boardState = [];
+        let history = [];
+        let selectedCell = null;
+        let playerSide = 'W'; // За кого играет пользователь
+        let currentTurn = 'W';
+        let recommendedMove = null;
+
+        function changeBoardSize(size) {
+            BOARD_SIZE = size;
+            document.querySelectorAll('.top-panel .selector-group')[0].querySelectorAll('.pill-btn').forEach(b => {
+                b.classList.toggle('active', b.innerText.includes(`${size}x${size}`));
+            });
+            initBoard();
+        }
+
+        function setPlayerSide(side) {
+            playerSide = side;
+            document.getElementById('side-w').classList.toggle('active', side === 'W');
+            document.getElementById('side-b').classList.toggle('active', side === 'B');
+            calculateBestMove();
+        }
+
+        function setTurn(color) {
+            currentTurn = color;
+            updateTurnUI();
+            calculateBestMove();
+        }
+
+        function updateTurnUI() {
+            document.getElementById('turn-w').classList.toggle('active', currentTurn === 'W');
+            document.getElementById('turn-b').classList.toggle('active', currentTurn === 'B');
+        }
+
+        function initBoard() {
+            boardState = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
+            const rowsForPieces = BOARD_SIZE === 6 ? 2 : (BOARD_SIZE === 8 ? 3 : 4);
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if ((r + c) % 2 === 1) {
+                        if (r < rowsForPieces) boardState[r][c] = { color: 'B', king: false };
+                        else if (r >= BOARD_SIZE - rowsForPieces) boardState[r][c] = { color: 'W', king: false };
+                    }
+                }
+            }
+            history = [];
+            selectedCell = null;
+            recommendedMove = null;
+            renderBoard();
+            calculateBestMove();
+        }
+
+        function saveHistory() {
+            history.push({
+                board: JSON.parse(JSON.stringify(boardState)),
+                turn: currentTurn
+            });
+        }
+
+        function undoMove() {
+            if (history.length === 0) return;
+            const last = history.pop();
+            boardState = last.board;
+            currentTurn = last.turn;
+            selectedCell = null;
+            updateTurnUI();
+            renderBoard();
+            calculateBestMove();
+        }
+
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.style.gridTemplateColumns = `repeat(${BOARD_SIZE}, 1fr)`;
+            boardEl.style.gridTemplateRows = `repeat(${BOARD_SIZE}, 1fr)`;
+            boardEl.innerHTML = '';
+
+            const isMyTurn = (currentTurn === playerSide);
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    const isDark = (r + c) % 2 === 1;
+                    cell.className = `cell ${isDark ? 'dark' : 'light'}`;
+
+                    if (selectedCell && selectedCell.r === r && selectedCell.c === c) {
+                        cell.classList.add('selected');
+                    }
+
+                    // Подсветка ходов в зависимости от того, чей ход (игрока или соперника)
+                    if (recommendedMove) {
+                        if (recommendedMove.fromR === r && recommendedMove.fromC === c) {
+                            cell.classList.add(isMyTurn ? 'best-from-player' : 'best-from-opp');
+                        }
+                        if (recommendedMove.toR === r && recommendedMove.toC === c) {
+                            cell.classList.add(isMyTurn ? 'best-to-player' : 'best-to-opp');
+                        }
+                    }
+
+                    const p = boardState[r][c];
+                    if (p) {
+                        const pieceEl = document.createElement('div');
+                        pieceEl.className = `piece ${p.color === 'W' ? 'white' : 'black'} ${p.king ? 'king' : ''}`;
+                        cell.appendChild(pieceEl);
+                    }
+
+                    cell.addEventListener('click', () => handleCellClick(r, c));
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(r, c) {
+            if ((r + c) % 2 === 0) return;
+            const p = boardState[r][c];
+
+            if (selectedCell && !p) {
+                saveHistory();
+                makeMove(boardState, selectedCell.r, selectedCell.c, r, c);
+                selectedCell = null;
+                currentTurn = currentTurn === 'W' ? 'B' : 'W';
+                updateTurnUI();
+                renderBoard();
+                calculateBestMove();
+                return;
+            }
+
+            if (p) {
+                selectedCell = { r, c };
+                renderBoard();
+            }
+        }
+
+        function makeMove(board, fromR, fromC, toR, toC) {
+            const p = board[fromR][fromC];
+            board[toR][toC] = p;
+            board[fromR][fromC] = null;
+
+            if (Math.abs(toR - fromR) >= 2) {
+                const midR = (fromR + toR) / 2;
+                const midC = (fromC + toC) / 2;
+                board[midR][midC] = null;
+            }
+
+            if (p.color === 'W' && toR === 0) p.king = true;
+            if (p.color === 'B' && toR === BOARD_SIZE - 1) p.king = true;
+        }
+
+        // РАСЧЕТ ХОДОВ (MINIMAX ENGINE)
+        function calculateBestMove() {
+            let moves = getAllValidMoves(boardState, currentTurn);
+
+            if (moves.length === 0) {
+                document.getElementById('eval-status').innerText = "Позиция: Завершено";
+                document.getElementById('best-move-text').innerText = "Конец игры / Нет ходов";
+                recommendedMove = null;
+                renderBoard();
+                return;
+            }
+
+            let bestMove = null;
+            let bestScore = -Infinity;
+
+            for (let move of moves) {
+                let tempBoard = JSON.parse(JSON.stringify(boardState));
+                makeMove(tempBoard, move.fromR, move.fromC, move.toR, move.toC);
+                let score = minimax(tempBoard, 3, -Infinity, Infinity, false, currentTurn);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = move;
+                }
+            }
+
+            recommendedMove = bestMove;
+            const cols = ['A','B','C','D','E','F','G','H','I','J'];
+            const fromStr = `${cols[bestMove.fromC]}${BOARD_SIZE - bestMove.fromR}`;
+            const toStr = `${cols[bestMove.toC]}${BOARD_SIZE - bestMove.toR}`;
+
+            const isMyTurn = (currentTurn === playerSide);
+            document.getElementById('eval-status').innerText = isMyTurn ? "Ход вашей стороны:" : "Ход противника:";
+            document.getElementById('best-move-text').innerText = `Рекомендация: ${fromStr} ➔ ${toStr}`;
+            
+            renderBoard();
+        }
+
+        function minimax(board, depth, alpha, beta, isMaximizing, myColor) {
+            if (depth === 0) return evaluateBoard(board, myColor);
+
+            let oppColor = myColor === 'W' ? 'B' : 'W';
+            let currColor = isMaximizing ? myColor : oppColor;
+            let moves = getAllValidMoves(board, currColor);
+
+            if (moves.length === 0) return isMaximizing ? -1000 : 1000;
+
+            if (isMaximizing) {
+                let maxEval = -Infinity;
+                for (let m of moves) {
+                    let bCopy = JSON.parse(JSON.stringify(board));
+                    makeMove(bCopy, m.fromR, m.fromC, m.toR, m.toC);
+                    let eval = minimax(bCopy, depth - 1, alpha, beta, false, myColor);
+                    maxEval = Math.max(maxEval, eval);
+                    alpha = Math.max(alpha, eval);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                for (let m of moves) {
+                    let bCopy = JSON.parse(JSON.stringify(board));
+                    makeMove(bCopy, m.fromR, m.fromC, m.toR, m.toC);
+                    let eval = minimax(bCopy, depth - 1, alpha, beta, true, myColor);
+                    minEval = Math.min(minEval, eval);
+                    beta = Math.min(beta, eval);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        function evaluateBoard(board, myColor) {
+            let score = 0;
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    let p = board[r][c];
+                    if (p) {
+                        let val = p.king ? 3.5 : 1.0;
+                        val += (p.color === 'W' ? (BOARD_SIZE - 1 - r) : r) * 0.1;
+                        if (p.color === myColor) score += val;
+                        else score -= val;
+                    }
+                }
+            }
+            return score;
+        }
+
+        function getAllValidMoves(board, color) {
+            let jumps = [];
+            let simples = [];
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    let p = board[r][c];
+                    if (p && p.color === color) {
+                        let pJumps = getPieceJumps(board, r, c);
+                        if (pJumps.length > 0) jumps.push(...pJumps);
+                        if (jumps.length === 0) {
+                            simples.push(...getPieceSimples(board, r, c));
+                        }
+                    }
+                }
+            }
+            return jumps.length > 0 ? jumps : simples;
+        }
+
+        function getPieceSimples(board, r, c) {
+            let p = board[r][c];
+            let res = [];
+            let dirs = p.king ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (p.color === 'W' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
+
+            for (let [dr, dc] of dirs) {
+                let nr = r + dr, nc = c + dc;
+                if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && !board[nr][nc]) {
+                    res.push({ fromR: r, fromC: c, toR: nr, toC: nc });
+                }
+            }
+            return res;
+        }
+
+        function getPieceJumps(board, r, c) {
+            let p = board[r][c];
+            let res = [];
+            let dirs = [[-1,-1],[-1,1],[1,-1],[1,1]];
+
+            for (let [dr, dc] of dirs) {
+                let nr = r + dr, nc = c + dc;
+                let jr = r + 2*dr, jc = c + 2*dc;
+                if (jr >= 0 && jr < BOARD_SIZE && jc >= 0 && jc < BOARD_SIZE) {
+                    if (board[nr][nc] && board[nr][nc].color !== p.color && !board[jr][jc]) {
+                        res.push({ fromR: r, fromC: c, toR: jr, toC: jc });
+                    }
+                }
+            }
+            return res;
+        }
+
+        function resetBoard() {
+            initBoard();
+        }
+
+        initBoard();
+    </script>
+</body>
+</html>
