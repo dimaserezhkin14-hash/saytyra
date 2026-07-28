@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Калькулятор Шашек Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.4);
+            --green: #10b981;
+            --green-glow: rgba(16, 185, 129, 0.5);
+            --red: #ef4444;
+            --gold: #f59e0b;
+            --text: #f8fafc;
+            --board-light: #e2e8f0;
+            --board-dark: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #0b0f19 70%);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* ХЕДЕР С ВЫБОРОМ РЕЖИМА */
+        .top-panel {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 10px 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+        }
+
+        .row-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mode-selector, .turn-selector {
+            display: flex;
+            gap: 4px;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 3px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .pill-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .pill-btn.active {
+            background: var(--accent);
+            color: #ffffff;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        /* ИНФО-БАР ОЦЕНКИ */
+        .eval-card {
+            width: 100%;
+            max-width: 400px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 12px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            text-align: center;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .eval-status {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .eval-best {
+            font-size: 16px;
+            color: var(--green);
+            font-weight: 800;
+            margin-top: 4px;
+            text-shadow: 0 0 10px var(--green-glow);
+            transition: all 0.3s ease;
+        }
+
+        /* ДОСКА С АНИМАЦИЯМИ */
+        .board-wrapper {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 1 / 1;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 8px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .board {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .cell.light { background-color: var(--board-light); }
+        .cell.dark { background-color: var(--board-dark); }
+
+        /* ЭФФЕКТЫ И АНИМАЦИИ ВЫДЕЛЕНИЯ */
+        .cell.selected {
+            background-color: #2563eb !important;
+            box-shadow: inset 0 0 12px rgba(255,255,255,0.5);
+        }
+
+        .cell.best-from {
+            background-color: #047857 !important;
+            animation: pulse-green 1.5s infinite alternate;
+        }
+
+        .cell.best-to {
+            background-color: #10b981 !important;
+            animation: pulse-green 1.5s infinite alternate;
+        }
+
+        .cell.best-to::after {
+            content: '✦';
+            color: #ffffff;
+            font-size: 20px;
+            animation: bounce 0.8s infinite alternate ease-in-out;
+        }
+
+        @keyframes pulse-green {
+            0% { box-shadow: inset 0 0 5px var(--green-glow); }
+            100% { box-shadow: inset 0 0 18px var(--green); }
+        }
+
+        @keyframes bounce {
+            from { transform: translateY(-2px) scale(0.9); }
+            to { transform: translateY(2px) scale(1.2); }
+        }
+
+        /* КРАСИВЫЕ 3D ШАШКИ С АНИМАЦИЕЙ */
+        .piece {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+        }
+
+        .piece:active {
+            transform: scale(1.15);
+        }
+
+        .piece.white {
+            background: radial-gradient(circle at 35% 35%, #ffffff, #cbd5e1);
+            border: 2px solid #94a3b8;
+            box-shadow: inset 0 -4px 6px rgba(0,0,0,0.3), 0 6px 12px rgba(0,0,0,0.4);
+        }
+
+        .piece.black {
+            background: radial-gradient(circle at 35% 35%, #334155, #0f172a);
+            border: 2px solid #020617;
+            box-shadow: inset 0 -4px 6px rgba(255,255,255,0.1), 0 6px 12px rgba(0,0,0,0.6);
+        }
+
+        .piece.king::after {
+            content: '👑';
+            font-size: 18px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+            animation: pop-king 0.4s ease-out;
+        }
+
+        @keyframes pop-king {
+            0% { transform: scale(0) rotate(-45deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        .controls-grid {
+            width: 100%;
+            max-width: 400px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .btn-action {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            color: #fff;
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-action:active {
+            transform: scale(0.95);
+        }
+
+        .btn-undo { border-color: rgba(148, 163, 184, 0.3); }
+        .btn-reset { border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
+        .btn-calc { background: var(--green); border: none; box-shadow: 0 4px 15px var(--green-glow); }
+    </style>
+</head>
+<body>
+
+    <div class="top-panel">
+        <div class="row-between">
+            <span style="font-size: 12px; color: #94a3b8; font-weight: 700;">Размер доски:</span>
+            <div class="mode-selector">
+                <button class="pill-btn" onclick="changeBoardSize(6)">6x6</button>
+                <button class="pill-btn active" id="mode-8" onclick="changeBoardSize(8)">8x8</button>
+                <button class="pill-btn" onclick="changeBoardSize(10)">10x10</button>
+            </div>
+        </div>
+        <div class="row-between">
+            <span style="font-size: 12px; color: #94a3b8; font-weight: 700;">Чей ход:</span>
+            <div class="turn-selector">
+                <button class="pill-btn active" id="turn-w" onclick="setTurn('W')">⚪️ Белые</button>
+                <button class="pill-btn" id="turn-b" onclick="setTurn('B')">⚫️ Чёрные</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="eval-card">
+        <div class="eval-status" id="eval-status">Анализ позиции...</div>
+        <div class="eval-best" id="best-move-text">Расчёт...</div>
+    </div>
+
+    <div class="board-wrapper">
+        <div class="board" id="board"></div>
+    </div>
+
+    <div class="controls-grid">
+        <button class="btn-action btn-undo" onclick="undoMove()">↩️ Назад</button>
+        <button class="btn-action btn-reset" onclick="resetBoard()">🔄 Сброс</button>
+        <button class="btn-action btn-calc" onclick="calculateBestMove()">💡 Расчёт</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        let BOARD_SIZE = 8;
+        let boardState = [];
+        let history = [];
+        let selectedCell = null;
+        let currentTurn = 'W';
+        let recommendedMove = null;
+
+        function changeBoardSize(size) {
+            BOARD_SIZE = size;
+            document.querySelectorAll('.mode-selector .pill-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText.includes(`${size}x${size}`));
+            });
+            initBoard();
+        }
+
+        function initBoard() {
+            boardState = Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null));
+            const rowsForPieces = BOARD_SIZE === 6 ? 2 : (BOARD_SIZE === 8 ? 3 : 4);
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if ((r + c) % 2 === 1) {
+                        if (r < rowsForPieces) boardState[r][c] = { color: 'B', king: false };
+                        else if (r >= BOARD_SIZE - rowsForPieces) boardState[r][c] = { color: 'W', king: false };
+                    }
+                }
+            }
+            history = [];
+            selectedCell = null;
+            recommendedMove = null;
+            renderBoard();
+            calculateBestMove();
+        }
+
+        function saveHistory() {
+            history.push({
+                board: JSON.parse(JSON.stringify(boardState)),
+                turn: currentTurn
+            });
+        }
+
+        function undoMove() {
+            if (history.length === 0) return;
+            const last = history.pop();
+            boardState = last.board;
+            currentTurn = last.turn;
+            selectedCell = null;
+            updateTurnUI();
+            renderBoard();
+            calculateBestMove();
+        }
+
+        function setTurn(color) {
+            currentTurn = color;
+            updateTurnUI();
+            calculateBestMove();
+        }
+
+        function updateTurnUI() {
+            document.getElementById('turn-w').classList.toggle('active', currentTurn === 'W');
+            document.getElementById('turn-b').classList.toggle('active', currentTurn === 'B');
+        }
+
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            boardEl.style.gridTemplateColumns = `repeat(${BOARD_SIZE}, 1fr)`;
+            boardEl.style.gridTemplateRows = `repeat(${BOARD_SIZE}, 1fr)`;
+            boardEl.innerHTML = '';
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    const isDark = (r + c) % 2 === 1;
+                    cell.className = `cell ${isDark ? 'dark' : 'light'}`;
+
+                    if (selectedCell && selectedCell.r === r && selectedCell.c === c) {
+                        cell.classList.add('selected');
+                    }
+
+                    if (recommendedMove) {
+                        if (recommendedMove.fromR === r && recommendedMove.fromC === c) cell.classList.add('best-from');
+                        if (recommendedMove.toR === r && recommendedMove.toC === c) cell.classList.add('best-to');
+                    }
+
+                    const p = boardState[r][c];
+                    if (p) {
+                        const pieceEl = document.createElement('div');
+                        pieceEl.className = `piece ${p.color === 'W' ? 'white' : 'black'} ${p.king ? 'king' : ''}`;
+                        cell.appendChild(pieceEl);
+                    }
+
+                    cell.addEventListener('click', () => handleCellClick(r, c));
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(r, c) {
+            if ((r + c) % 2 === 0) return;
+            const p = boardState[r][c];
+
+            if (selectedCell && !p) {
+                saveHistory();
+                makeMove(boardState, selectedCell.r, selectedCell.c, r, c);
+                selectedCell = null;
+                currentTurn = currentTurn === 'W' ? 'B' : 'W';
+                updateTurnUI();
+                renderBoard();
+                calculateBestMove();
+                return;
+            }
+
+            if (p) {
+                selectedCell = { r, c };
+                renderBoard();
+            }
+        }
+
+        function makeMove(board, fromR, fromC, toR, toC) {
+            const p = board[fromR][fromC];
+            board[toR][toC] = p;
+            board[fromR][fromC] = null;
+
+            if (Math.abs(toR - fromR) >= 2) {
+                const midR = (fromR + toR) / 2;
+                const midC = (fromC + toC) / 2;
+                board[midR][midC] = null;
+            }
+
+            if (p.color === 'W' && toR === 0) p.king = true;
+            if (p.color === 'B' && toR === BOARD_SIZE - 1) p.king = true;
+        }
+
+        // --- МОЩНЫЙ МИНИМАКС ДВИЖОК С ЛОГИКОЙ ---
+        function calculateBestMove() {
+            let moves = getAllValidMoves(boardState, currentTurn);
+
+            if (moves.length === 0) {
+                document.getElementById('eval-status').innerText = "Позиция: Завершено";
+                document.getElementById('best-move-text').innerText = "Мат / Тупик";
+                recommendedMove = null;
+                renderBoard();
+                return;
+            }
+
+            let bestMove = null;
+            let bestScore = -Infinity;
+
+            // Поиск на глубину 4 хода
+            for (let move of moves) {
+                let tempBoard = JSON.parse(JSON.stringify(boardState));
+                makeMove(tempBoard, move.fromR, move.fromC, move.toR, move.toC);
+                
+                let score = minimax(tempBoard, 3, -Infinity, Infinity, false, currentTurn);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = move;
+                }
+            }
+
+            recommendedMove = bestMove;
+            const cols = ['A','B','C','D','E','F','G','H','I','J'];
+            const fromStr = `${cols[bestMove.fromC]}${BOARD_SIZE - bestMove.fromR}`;
+            const toStr = `${cols[bestMove.toC]}${BOARD_SIZE - bestMove.toR}`;
+
+            document.getElementById('eval-status').innerText = `Преимущество: ${bestScore > 0 ? '+' : ''}${bestScore.toFixed(1)}`;
+            document.getElementById('best-move-text').innerText = `Лучший ход: ${fromStr} ➔ ${toStr}`;
+            
+            renderBoard();
+        }
+
+        function minimax(board, depth, alpha, beta, isMaximizing, myColor) {
+            if (depth === 0) return evaluateBoard(board, myColor);
+
+            let oppColor = myColor === 'W' ? 'B' : 'W';
+            let currColor = isMaximizing ? myColor : oppColor;
+            let moves = getAllValidMoves(board, currColor);
+
+            if (moves.length === 0) return isMaximizing ? -1000 : 1000;
+
+            if (isMaximizing) {
+                let maxEval = -Infinity;
+                for (let m of moves) {
+                    let bCopy = JSON.parse(JSON.stringify(board));
+                    makeMove(bCopy, m.fromR, m.fromC, m.toR, m.toC);
+                    let eval = minimax(bCopy, depth - 1, alpha, beta, false, myColor);
+                    maxEval = Math.max(maxEval, eval);
+                    alpha = Math.max(alpha, eval);
+                    if (beta <= alpha) break;
+                }
+                return maxEval;
+            } else {
+                let minEval = Infinity;
+                for (let m of moves) {
+                    let bCopy = JSON.parse(JSON.stringify(board));
+                    makeMove(bCopy, m.fromR, m.fromC, m.toR, m.toC);
+                    let eval = minimax(bCopy, depth - 1, alpha, beta, true, myColor);
+                    minEval = Math.min(minEval, eval);
+                    beta = Math.min(beta, eval);
+                    if (beta <= alpha) break;
+                }
+                return minEval;
+            }
+        }
+
+        function evaluateBoard(board, myColor) {
+            let score = 0;
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    let p = board[r][c];
+                    if (p) {
+                        let val = p.king ? 3.5 : 1.0;
+                        // Бонус за продвижение и центр
+                        val += (p.color === 'W' ? (BOARD_SIZE - 1 - r) : r) * 0.1;
+                        if (c >= 2 && c <= BOARD_SIZE - 3) val += 0.2;
+
+                        if (p.color === myColor) score += val;
+                        else score -= val;
+                    }
+                }
+            }
+            return score;
+        }
+
+        function getAllValidMoves(board, color) {
+            let jumps = [];
+            let simples = [];
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    let p = board[r][c];
+                    if (p && p.color === color) {
+                        let pJumps = getPieceJumps(board, r, c);
+                        if (pJumps.length > 0) jumps.push(...pJumps);
+
+                        if (jumps.length === 0) {
+                            simples.push(...getPieceSimples(board, r, c));
+                        }
+                    }
+                }
+            }
+            return jumps.length > 0 ? jumps : simples;
+        }
+
+        function getPieceSimples(board, r, c) {
+            let p = board[r][c];
+            let res = [];
+            let dirs = p.king ? [[-1,-1],[-1,1],[1,-1],[1,1]] : (p.color === 'W' ? [[-1,-1],[-1,1]] : [[1,-1],[1,1]]);
+
+            for (let [dr, dc] of dirs) {
+                let nr = r + dr, nc = c + dc;
+                if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && !board[nr][nc]) {
+                    res.push({ fromR: r, fromC: c, toR: nr, toC: nc });
+                }
+            }
+            return res;
+        }
+
+        function getPieceJumps(board, r, c) {
+            let p = board[r][c];
+            let res = [];
+            let dirs = [[-1,-1],[-1,1],[1,-1],[1,1]];
+
+            for (let [dr, dc] of dirs) {
+                let nr = r + dr, nc = c + dc;
+                let jr = r + 2*dr, jc = c + 2*dc;
+                if (jr >= 0 && jr < BOARD_SIZE && jc >= 0 && jc < BOARD_SIZE) {
+                    if (board[nr][nc] && board[nr][nc].color !== p.color && !board[jr][jc]) {
+                        res.push({ fromR: r, fromC: c, toR: jr, toC: jc });
+                    }
+                }
+            }
+            return res;
+        }
+
+        function resetBoard() {
+            initBoard();
+        }
+
+        initBoard();
+    </script>
+</body>
+</html>
